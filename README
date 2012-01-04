@@ -1,0 +1,40 @@
+Hash::Map version 0.001
+=======================
+
+Manipulate hashes map like.
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+Alternatively, to install with Module::Build, you can use the following commands:
+
+    perl Build.PL
+    ./Build
+    ./Build test
+    ./Build install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+    Carp
+    Clone
+    Perl6::Export::Attrs
+    Try::Tiny
+
+COPYRIGHT AND LICENCE
+
+Copyright (c) 2012,
+Steffen Winkler
+steffenw at cpan.org.
+All rights reserved.
+
+This module is free software;
+you can redistribute it and/or modify it
+under the same terms as Perl itself.

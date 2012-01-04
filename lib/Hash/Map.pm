@@ -1,4 +1,4 @@
-package Hash::Map;
+package Hash::Map; ## no critic (TidyCode)
 
 use strict;
 use warnings;
@@ -50,10 +50,12 @@ sub _hash {
     return %{ $self->_hashref($key) };
 }
 
+## no critic (ArgUnpacking);
 sub target_ref { return shift->_hashref(target => @_) }
 sub source_ref { return shift->_hashref(source => @_) }
 sub target     { return shift->_hash(target => @_) }
 sub source     { return shift->_hash(source => @_) }
+## use critic (ArgUnpacking);
 
 sub clone_target {
     my $self = shift;
@@ -94,7 +96,7 @@ sub copy_keys_ref {
         or confess 'Array reference ecpected';
     if ( ref $code_ref eq 'CODE' ) {
         return $self->map_keys_ref({
-            map {
+            map { ## no critic (MutatingListFunctions VoidMap)
                 $_ => do {
                     local $_ = $_;
                     scalar $code_ref->($self);
@@ -112,10 +114,10 @@ sub copy_keys_ref {
 sub copy_keys {
     my ($self, @keys) = @_;
 
-    if ( @keys && ref $keys[$#keys] eq 'CODE' ) {
+    if ( @keys && ref $keys[-1] eq 'CODE' ) {
         my $code_ref = pop @keys;
         return $self->map_keys_ref({
-            map {
+            map { ## no critic (MutatingListFunctions VoidMap)
                 $_ => do {
                     local $_ = $_;
                     scalar $code_ref->($self);
@@ -228,7 +230,7 @@ sub hashref_map :Export {
     return $self->target_ref;
 }
 
-sub hash_map :Export {
+sub hash_map :Export { ## no critic (ArgUnpacking)
     return %{ hashref_map(@_) };
 }
 
@@ -240,7 +242,7 @@ __END__
 
 =head1 NAME
 
-Hash::Map - Manipulate Hashes
+Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
@@ -327,7 +329,7 @@ Hash::Map - Manipulate Hashes
         ...
     });
 
-=head2 Function style
+=head2 Functional style
 
     use Hash::Map qw(hash_map hashref_map);
 
@@ -446,7 +448,7 @@ Now we can write:
                     my $obj    = shift;
                     my $method = "get_$key";
                     return $obj->source_ref->$method;
-                },    
+                },
             ]
         ),
         hash_map(
@@ -614,7 +616,7 @@ Similar to method modify.
 Only the given parameter is a hash reference and not a hash.
 
     $obj = $obj->modify_ref({key1 => $code_ref1, ...});
-    
+
 =head2 subroutine hash_map
 
 This subroutine is for the fuctional interface only.
