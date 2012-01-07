@@ -1,12 +1,13 @@
-<SOFTPKG NAME="Hash-Map" VERSION="0.001">
+<SOFTPKG NAME="Hash-Map" VERSION="0.002">
     <ABSTRACT>Hash::Map - Manipulate hashes map like</ABSTRACT>
     <AUTHOR>Steffen Winkler &lt;steffenw at cpan.org&gt;</AUTHOR>
     <IMPLEMENTATION>
         <REQUIRE NAME="Perl6::Export::Attrs" VERSION="0" />
+        <REQUIRE NAME="Scalar::Util" VERSION="0" />
         <REQUIRE NAME="Try::Tiny" VERSION="0" />
         <REQUIRE NAME="version::" VERSION="0" />
         <REQUIRE NAME="Clone::" VERSION="0" />
         <REQUIRE NAME="Carp::" VERSION="0" />
-        <CODEBASE HREF="PPM-Hash-Map-0.001.tar.gz" />
+        <CODEBASE HREF="PPM-Hash-Map-0.002.tar.gz" />
     </IMPLEMENTATION>
 </SOFTPKG>

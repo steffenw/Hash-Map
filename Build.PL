@@ -15,6 +15,7 @@ Module::Build->new(
         Carp                   => 0,
         Clone                  => 0,
         'Perl6::Export::Attrs' => 0,
+        'Scalar::Util'         => 0,
         'Try::Tiny'            => 0,
     },
     build_requires => {

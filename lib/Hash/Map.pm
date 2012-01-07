@@ -3,11 +3,12 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 use Carp qw(confess);
 use Clone qw(clone);
 use Perl6::Export::Attrs;
+use Scalar::Util qw(blessed);
 use Try::Tiny;
 
 sub new {
@@ -25,6 +26,9 @@ sub _hashref {
     if ( defined $hashref ) {
         ref $hashref eq 'HASH'
             or confess 'Hash reference ecpected';
+        if ( ! blessed $self ) {
+            $self = $self->new; # this method used as constructor
+        }
         $self->{$key} = $hashref;
         return $self;
     }
@@ -43,6 +47,9 @@ sub _hash {
         catch {
             confess 'Hash expected ', $_;
         };
+        if ( ! blessed $self ) {
+            $self = $self->new; # this method used as constructor
+        }
         $self->_hashref($key, $hashref);
         return $self;
     }
@@ -206,10 +213,60 @@ sub modify {
     return $self->modify_ref($modify_ref);
 }
 
+sub copy_modify_ref {
+    my ($self, $copy_modify_ref) = @_;
+
+    ref $copy_modify_ref eq 'HASH'
+        or confess 'Hash reference ecpected';
+    $self->copy_keys( keys %{$copy_modify_ref} );
+
+    return $self->modify_ref($copy_modify_ref);
+}
+
+sub copy_modify {
+    my ($self, @more) = @_;
+
+    my $copy_modify_ref;
+    try {
+        $copy_modify_ref = { @more };
+    }
+    catch {
+        confess 'Hash expected ', $_;
+    };
+
+    return $self->copy_modify_ref($copy_modify_ref);
+}
+
+sub map_modify_ref {
+    my ($self, $map_modify_ref) = @_;
+
+    ref $map_modify_ref eq 'ARRAY'
+        or confess 'Array reference ecpected';
+
+    return $self->map_modify( @{$map_modify_ref} );
+}
+
+sub map_modify {
+    my ($self, @map_modify) = @_;
+
+    @map_modify % 3 ## no critic (MagicNumber)
+        and confess
+            scalar @map_modify,
+            ' elements in array are not a group of 3';
+    my (@map_keys, @modify);
+    while ( my ($old_key, $new_key, $code_ref) = splice @map_modify, 0, 3 ) { ## no critic (MagicNumber)
+        @map_keys = ($old_key, $new_key);
+        @modify   = ($new_key, $code_ref);
+    };
+    $self->map_keys(@map_keys);
+
+    return $self->modify(@modify);
+}
+
 sub hashref_map :Export {
     my ($source_ref, @more) = @_;
 
-    my $self = Hash::Map->new->source_ref($source_ref);
+    my $self = Hash::Map->source_ref($source_ref);
     ITEM:
     for my $item (@more) {
         if ( ref $item eq 'ARRAY' ) {
@@ -246,9 +303,20 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.001
+0.002
 
 =head1 SYNOPSIS
+
+When I write
+
+    $obj = $obj->this_method;
+
+I mean, that the Hash::Map object itself will be returned.
+So it is possible to build chains like that:
+
+    $obj->this_method->next_method;
+
+It is typical used for setter or worker methods.
 
 =head2 OO style
 
@@ -260,7 +328,7 @@ Hash::Map - Manipulate hashes map like
     $obj = $obj->target(a => 1);
     $obj = $obj->target_ref({a => 1});
 
-    # get target hash
+    # get target hash (no set parameters)
     $target = $obj->target;
     $target = $obj->target_ref;
 
@@ -268,7 +336,7 @@ Hash::Map - Manipulate hashes map like
     $obj = $obj->source(b => 2, c => 3);
     $obj = $obj->source_ref({b => 2, c => 3});
 
-    # get source hash
+    # get source hash (no set parameters)
     $source = $obj->source;
     $source = $obj->source_ref;
 
@@ -307,7 +375,7 @@ Hash::Map - Manipulate hashes map like
     $obj = $obj->map_keys(b => 'bb', c => 'cc');
     $obj = $obj->map_keys_ref({b => 'bb', c => 'cc'});
 
-    # merge the given hash into target hash (possible overwrite some keys)
+    # merge the given hash into target hash
     $obj = $obj->merge_hash(d => 4, e => 5);
     $obj = $obj->merge_hashref({d => 4, e => 5});
 
@@ -329,6 +397,46 @@ Hash::Map - Manipulate hashes map like
         ...
     });
 
+    # copy data from source to target using keys
+    # and then
+    # modify target inplace by given code
+    $obj = $obj->copy_modify(
+        f => sub {
+            my $obj = shift;
+            my $current_value_of_key_f_in_target = $_;
+            return; # $target{f} will be undef because of scalar context
+        },
+        ...
+    );
+    $obj = $obj->copy_modify_ref({
+        f => sub {
+            my $obj   = shift;
+            my $current_value_of_key_f_in_target = $_;
+            return "new $value";
+        },
+        ...
+    });
+
+    # copy data from source (key of map) to target (value of map)
+    # and then
+    # modify target inplace by given code
+    $obj = $obj->map_modify(
+        f => ff => sub {
+            my $obj = shift;
+            my $current_value_of_key_f_in_source = $_;
+            return; # $target{ff} will be undef because of scalar context
+        },
+        ...
+    );
+    $obj = $obj->copy_modify_ref({
+        f => ff => sub {
+            my $obj   = shift;
+            my $current_value_of_key_f_in_source = $_;
+            return "new $value";
+        },
+        ...
+    });
+
 =head2 Functional style
 
     use Hash::Map qw(hash_map hashref_map);
@@ -345,12 +453,29 @@ Hash::Map - Manipulate hashes map like
         },
     );
 
-Similar, only the method name and return value has chenged.
+Similar, only the method name and return value has changed.
 
     $target_hashref = hashref_map(
         $source_hashref,
         ...
     );
+
+=head2 Automatic construction
+
+Methods C<target>, C<target_ref>, C<source> and C<source>
+can work as constructor too.
+
+    Hash::Map->new->target(...);
+    Hash::Map->new->target_ref(...);
+    Hash::Map->new->source(...);
+    Hash::Map->new->source_ref(...);
+
+shorter written as:
+
+    Hash::Map->target(...);
+    Hash::Map->target_ref(...);
+    Hash::Map->source(...);
+    Hash::Map->source_ref(...);
 
 =head1 DESCRIPTION
 
@@ -362,7 +487,7 @@ Not all can be implemented functional.
 
 =head1 Code example
 
-Don't be shocked about the fully examples.
+Don't be shocked about the big examples.
 
 If you have nearly 1 type of each mapping.
 Map it like before.
@@ -390,12 +515,11 @@ Now we can write:
 
     foo(
         Hash::Map
-            ->new
             ->source_ref($form)
             ->copy_keys(
-                qw(street city country_code)
+                qw(street city)
             )
-            ->modify(
+            ->copy_modify(
                 country_code => sub {
                     return $_ eq 'D' ? 'DE' : $_;
                 },
@@ -470,6 +594,8 @@ A simple constructor without any parameters.
 
     my $obj = Hash::Map->new;
 
+Typical you don't call method new directly.
+
 =head2 method target
 
 Set or get the target hash.
@@ -481,6 +607,10 @@ Otherwise use method target_ref.
 
     %target = $obj->target;
 
+This method is able to construct the object first
+
+    Hash::Map->target(...);
+
 =head2 method target_ref
 
 Set or get the target hash using a hash reference.
@@ -488,6 +618,10 @@ Set or get the target hash using a hash reference.
     $obj = $obj->target_ref($target_hashref);
 
     $target_hashref = $obj->target_ref;
+
+This method is able to construct the object first
+
+    Hash::Map->target_ref(...);
 
 =head2 method source
 
@@ -500,6 +634,10 @@ Otherwise use method target_ref.
 
     %source = $obj->source;
 
+This method is able to construct the object first
+
+    Hash::Map->source(...);
+
 =head2 method source_ref
 
 Set or get the source hash using a hash reference.
@@ -507,6 +645,10 @@ Set or get the source hash using a hash reference.
     $obj = $obj->source_ref($source_hashref);
 
     $source_hashref = $obj->source_ref;
+
+This method is able to construct the object first
+
+    Hash::Map->source_ref(...);
 
 =head2 method clone_target
 
@@ -608,14 +750,64 @@ The first parameter of the callback subroutine is the object itself.
 The old value of the target hash is in $_;
 Return the new value.
 
-    $obj = $obj->modify(key1 => $code_ref1, ...);
+    $obj = $obj->modify(
+        key1 => $code_ref1,
+        ...
+    );
 
 =head2 method modify_ref
 
 Similar to method modify.
 Only the given parameter is a hash reference and not a hash.
 
-    $obj = $obj->modify_ref({key1 => $code_ref1, ...});
+    $obj = $obj->modify_ref({
+        key1 => $code_ref1,
+        ...
+    });
+
+=head2 method copy_modify
+
+This is a combination of method copy_keys and modify.
+
+    $obj = $obj->copy_modify(
+        key1 => $code_ref1,
+        ...
+    );
+
+It is not possible to rename all keys during copy.
+Use method map_modify instead.
+
+=head2 method copy_modify_ref
+
+Similar to method copy_modify.
+Only the given parameter is a hash reference and not a hash.
+
+    $obj = $obj->copy_modify_ref({
+        key1 => $code_ref1,
+        ...
+    });
+
+It is not possible to rename all keys during copy.
+Use method map_modify_ref instead.
+
+=head2 method map_modify
+
+This is a combination of method map_keys and modify.
+
+    $obj = $obj->map_modify(
+        source_key1 => target_key1 => $code_ref1,
+        ...
+    );
+
+=head2 method map_modify_ref
+
+Similar to method map_modify.
+Only the given parameter is a array reference and not a array.
+
+    $obj = $obj->map_modify([
+        source_key1 => target_key1 => $code_ref1,
+        ...
+    ]);
 
 =head2 subroutine hash_map
 
@@ -657,6 +849,8 @@ L<Carp|Carp>
 L<Clone|Clone>
 
 L<Perl6::Export::Attrs|Perl6::Export::Attrs>
+
+L<Scalar::Util|Scalar::Util>
 
 L<Try::Tiny|Try::Tiny>
 
