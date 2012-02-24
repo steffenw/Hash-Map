@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 34 + 1;
+use Test::More tests => 48 + 1;
 use Test::NoWarnings;
 use Test::Differences;
 
@@ -82,19 +82,19 @@ BEGIN {
 {
     eq_or_diff(
         scalar Hash::Map
-                ->target(a => 11, b => 12, c => 13)
+                ->target(a => 11, b => 12, c => 13, d => 14)
                 ->delete_keys(qw(a c))
                 ->target_ref,
-        {b => 12},
+        {b => 12, d => 14},
         'delete_keys',
     );
 
     eq_or_diff(
         scalar Hash::Map
-            ->target_ref({ a => 21, b => 22, c => 23 })
-            ->delete_keys_ref([ qw(b) ])
+            ->target_ref({ a => 21, b => 22, c => 23, d => 24 })
+            ->delete_keys_ref([ qw(a c) ])
             ->target_ref,
-        {a => 21, c => 23},
+        {b => 22, d => 24},
         'delete_keys_ref',
     );
 }
@@ -104,20 +104,20 @@ BEGIN {
     eq_or_diff(
         scalar Hash::Map
             ->target(a => 11)
-            ->source(b => 12, c => 13)
-            ->copy_keys(qw(c))
+            ->source(b => 12, c => 13, d => 14)
+            ->copy_keys(qw(c d))
             ->target_ref,
-        {a => 11, c => 13},
+        {a => 11, c => 13, d => 14},
         'copy_keys',
     );
 
     eq_or_diff(
         scalar Hash::Map
             ->target_ref({ a => 21 })
-            ->source_ref({ b => 22, c => 23 })
-            ->copy_keys_ref([ qw(c) ])
+            ->source_ref({ b => 22, c => 23, d => 24 })
+            ->copy_keys_ref([ qw(c d) ])
             ->target_ref,
-        {a => 21, c => 23},
+        {a => 21, c => 23, d => 24},
         'copy_keys_ref',
     );
 }
@@ -129,9 +129,9 @@ BEGIN {
     eq_or_diff(
         scalar $obj
             ->target(a => 11)
-            ->source(b => 12, c => 13)
+            ->source(b => 12, c => 13, d => 14)
             ->copy_keys(
-                qw(c),
+                qw(c d),
                 sub {
                     eq_or_diff(
                         shift,
@@ -142,16 +142,16 @@ BEGIN {
                 },
             )
             ->target_ref,
-        {a => 11, p_c => 13},
+        {a => 11, p_c => 13, p_d => 14},
         'copy_keys with code_ref',
     );
 
     eq_or_diff(
         scalar $obj
             ->target_ref({ a => 21 })
-            ->source_ref({ b => 22, c => 23 })
+            ->source_ref({ b => 22, c => 23, d => 24 })
             ->copy_keys_ref(
-                [ qw(c) ],
+                [ qw(c d) ],
                 sub {
                     eq_or_diff(
                         shift,
@@ -162,7 +162,7 @@ BEGIN {
                 },
             )
             ->target_ref,
-        {a => 21, p_c => 23},
+        {a => 21, p_c => 23, p_d => 24},
         'copy_keys_ref with code_ref',
     );
 }
@@ -192,7 +192,7 @@ BEGIN {
             })
             ->target_ref,
         {a => 21, c => 22, d => 23},
-        'copy_keys_ref',
+        'map_keys_ref',
     );
 }
 
@@ -219,7 +219,7 @@ BEGIN {
             })
             ->target_ref,
         {a => 22, b => 23},
-        'copy_keys_ref',
+        'merge_hash_ref',
     );
 }
 
@@ -229,7 +229,7 @@ BEGIN {
 
     eq_or_diff(
         scalar $obj
-            ->target(a => 11)
+            ->target(a => 11, b => 12)
             ->modify(
                 a => sub {
                     eq_or_diff(
@@ -237,17 +237,20 @@ BEGIN {
                         $obj,
                         'modify, object in code_ref',
                     );
-                    return "p_$_";
+                    return "pa_$_";
+                },
+                b => sub {
+                    return "pb_$_";
                 },
             )
             ->target_ref,
-        {a => 'p_11'},
+        {a => 'pa_11', b => 'pb_12'},
         'modify',
     );
 
     eq_or_diff(
         scalar $obj
-            ->target_ref({ a => 21 })
+            ->target_ref({ a => 21, b => 22 })
             ->modify_ref({
                 a => sub {
                     eq_or_diff(
@@ -255,12 +258,15 @@ BEGIN {
                         $obj,
                         'modify_ref, object in code_ref',
                     );
-                    return "p_$_";
+                    return "pa_$_";
+                },
+                b => sub {
+                    return "pb_$_";
                 },
             })
             ->target_ref,
-        {a => 'p_21'},
-        'copy_keys_ref with code_ref',
+        {a => 'pa_21', b => 'pb_22'},
+        'modify_ref',
     );
 }
 
@@ -270,7 +276,7 @@ BEGIN {
 
     eq_or_diff(
         scalar $obj
-            ->source(a => 11)
+            ->source(a => 11, b => 12)
             ->copy_modify(
                 a => sub {
                     eq_or_diff(
@@ -278,17 +284,20 @@ BEGIN {
                         $obj,
                         'copy_modify, object in code_ref',
                     );
-                    return "p_$_";
+                    return "pa_$_";
+                },
+                b => sub {
+                    return "pb_$_";
                 },
             )
             ->target_ref,
-        {a => 'p_11'},
+        {a => 'pa_11', b => 'pb_12'},
         'copy_modify',
     );
 
     eq_or_diff(
         scalar $obj
-            ->source_ref({ a => 21 })
+            ->source_ref({ a => 21, b => 22 })
             ->copy_modify_ref({
                 a => sub {
                     eq_or_diff(
@@ -296,12 +305,55 @@ BEGIN {
                         $obj,
                         'copy_modify_ref, object in code_ref',
                     );
-                    return "p_$_";
+                    return "pa_$_";
+                },
+                b => sub {
+                    return "pb_$_";
                 },
             })
             ->target_ref,
-        {a => 'p_21'},
-        'copy_modify_ref with code_ref',
+        {a => 'pa_21', b => 'pb_22'},
+        'copy_modify_ref',
+    );
+
+    eq_or_diff(
+        scalar $obj
+            ->source(a => 31, b => 32)
+            ->copy_modify_identical(
+                qw(a b),
+                sub {
+                    my ($self, $key) = @_;
+                    eq_or_diff(
+                        $self,
+                        $obj,
+                        'copy_modify_identical, object in code_ref',
+                    );
+                    return "p${key}_$_";
+                },
+            )
+            ->target_ref,
+        {a => 'pa_31', b => 'pb_32'},
+        'copy_modify_identical',
+    );
+
+    eq_or_diff(
+        scalar $obj
+            ->source_ref({ a => 41, b => 42 })
+            ->copy_modify_identical_ref(
+                [ qw(a b) ],
+                sub {
+                    my ($self, $key) = @_;
+                    eq_or_diff(
+                        $self,
+                        $obj,
+                        'copy_modify_identical_ref, object in code_ref',
+                    );
+                    return "p${key}_$_";
+                },
+            )
+            ->target_ref,
+        {a => 'pa_41', b => 'pb_42'},
+        'copy_modify_identical_ref',
     );
 }
 
@@ -311,7 +363,7 @@ BEGIN {
 
     eq_or_diff(
         scalar $obj
-            ->source(a => 11)
+            ->source(a => 11, b => 12)
             ->map_modify(
                 a => b => sub {
                     eq_or_diff(
@@ -319,17 +371,20 @@ BEGIN {
                         $obj,
                         'map_modify, object in code_ref',
                     );
-                    return "p_$_";
+                    return "pab_$_";
+                },
+                b => c => sub {
+                    return "pbc_$_";
                 },
             )
             ->target_ref,
-        {b => 'p_11'},
+        {b => 'pab_11', c => 'pbc_12'},
         'map_modify',
     );
 
     eq_or_diff(
         scalar $obj
-            ->source_ref({ a => 21 })
+            ->source_ref({ a => 21, b => 22 })
             ->map_modify_ref([
                 a => b => sub {
                     eq_or_diff(
@@ -337,11 +392,55 @@ BEGIN {
                         $obj,
                         'map_modify_ref, object in code_ref',
                     );
-                    return "p_$_";
+                    return "pab_$_";
+                },
+                b => c => sub {
+                    return "pbc_$_";
                 },
             ])
             ->target_ref,
-        {b => 'p_21'},
-        'map_modify_ref with code_ref',
+        {b => 'pab_21', c => 'pbc_22'},
+        'map_modify_ref',
+    );
+
+    eq_or_diff(
+        scalar $obj
+            ->source(a => 31, b => 32)
+            ->map_modify_identical(
+                a => q{b},
+                b => q{c},
+                sub {
+                    my ($self, $key_source, $key_target) = @_;
+                    eq_or_diff(
+                        $self,
+                        $obj,
+                        'map_modify_identical, object in code_ref',
+                    );
+                    return "p${key_source}${key_target}_$_";
+                },
+            )
+            ->target_ref,
+        {b => 'pab_31', c => 'pbc_32'},
+        'map_modify_identical',
+    );
+
+    eq_or_diff(
+        scalar $obj
+            ->source_ref({ a => 41, b => 42})
+            ->map_modify_identical_ref(
+                {a => q{b}, b => q{c}},
+                sub {
+                    my ($self, $key_source, $key_target) = @_;
+                    eq_or_diff(
+                        $self,
+                        $obj,
+                        'map_modify_identical_ref, object in code_ref',
+                    );
+                    return "p${key_source}${key_target}_$_";
+                },
+            )
+            ->target_ref,
+        {b => 'pab_41', c => 'pbc_42'},
+        'map_modify_identical_ref',
     );
 }

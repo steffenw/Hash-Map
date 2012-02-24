@@ -1,5 +1,12 @@
 Revision history for Perl extension Hash::Map.
 
+0.003  Fri Feb 24 18:00:00 2012
+- added methods
+  - copy_modify_identical(_ref)
+  - map_modify_identical(_ref)
+- repaired method map_modify
+- fixed typos in error messages
+
 0.002  Sat Jan  7 14:18:58 2012
 - added automatic construction
   for methods target, target_ref, source and source_ref
