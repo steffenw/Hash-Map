@@ -1,5 +1,10 @@
 Revision history for Perl extension Hash::Map.
 
+0.004  Sun Mar 11 11:30:50 2012
+- Pod repaired
+  https://rt.cpan.org/Public/Bug/Display.html?id=75576
+- added method combine
+
 0.003  Fri Feb 24 18:00:00 2012
 - added methods
   - copy_modify_identical(_ref)

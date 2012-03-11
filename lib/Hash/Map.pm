@@ -3,7 +3,7 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 use Carp qw(confess);
 use Clone qw(clone);
@@ -63,6 +63,19 @@ sub source_ref { return shift->_hashref(source => @_) }
 sub target     { return shift->_hash(target => @_) }
 sub source     { return shift->_hash(source => @_) }
 ## use critic (ArgUnpacking);
+
+sub combine {
+    my ($self, @hash_maps) = @_;
+
+    if ( ! blessed $self ) {
+        $self = $self->new; # this method used as constructor
+    }
+    for my $hash_map (@hash_maps) {
+        $self->merge_hashref( $hash_map->target_ref );
+    }
+
+    return $self;
+}
 
 sub clone_target {
     my $self = shift;
@@ -365,9 +378,11 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.003
+0.004
 
 =head1 SYNOPSIS
+
+=head2 Hint
 
 When I write
 
@@ -384,6 +399,9 @@ It is typical used for setter or worker methods.
 
     require Hash::Map;
 
+    # Constructor typical not called directly.
+    # Methods "target", "target_ref", "source", "source_ref"
+    # and combine are alternative constructors.
     my $obj = Hash::Map->new;
 
     # set target hash
@@ -401,6 +419,9 @@ It is typical used for setter or worker methods.
     # get source hash (no set parameters)
     $source = $obj->source;
     $source = $obj->source_ref;
+
+    # combine - merge targets of other Hash::Map objects into $obj target
+    $obj = $obj->combine(@objects);
 
     # clone target
     $obj = $obj->clone_target;
@@ -525,7 +546,7 @@ It is typical used for setter or worker methods.
             return; # $target{key} will be undef because of scalar context
         },
     );
-    $obj = $obj->map_modify_ref(
+    $obj = $obj->map_modify_identical_ref(
         {
             f => ff,
             ...
@@ -562,13 +583,14 @@ Similar, only the method name and return value has changed.
 
 =head2 Automatic construction
 
-Methods C<target>, C<target_ref>, C<source> and C<source>
+Methods "target", "target_ref", "source", "source_ref" and "combine"
 can work as constructor too.
 
     Hash::Map->new->target(...);
     Hash::Map->new->target_ref(...);
     Hash::Map->new->source(...);
     Hash::Map->new->source_ref(...);
+    Hash::Map->new->combine(...);
 
 shorter written as:
 
@@ -576,6 +598,7 @@ shorter written as:
     Hash::Map->target_ref(...);
     Hash::Map->source(...);
     Hash::Map->source_ref(...);
+    Hash::Map->combine(...);
 
 =head1 DESCRIPTION
 
@@ -596,16 +619,16 @@ Otherwise the module helps you to prevent: Don't repeat yourself.
 Often we read in code something like that:
 
     foo(
-        street         => $form->{street},
-        city           => $form->{city},
-        country_code   => $form->{country_code} eq 'D'
-                          ? 'DE'
-                          : $form->{country_code},
-        zip_code       => $form->{zip},
-        name           => "$form->{first_name} $form->{family_name}",
-        account        => $bar->get_account,
-        mail_name      => $mail->{name},
-        mail_address   => $mail->{address},
+        street       => $form->{street},
+        city         => $form->{city},
+        country_code => $form->{country_code} eq 'D'
+                        ? 'DE'
+                        : $form->{country_code},
+        zip_code     => $form->{zip},
+        name         => "$form->{first_name} $form->{family_name}",
+        account      => $bar->get_account,
+        mail_name    => $mail->{name},
+        mail_address => $mail->{address},
     );
 
 =head2 OO interface
@@ -613,38 +636,41 @@ Often we read in code something like that:
 Now we can write:
 
     foo(
-        Hash::Map
-            ->source_ref($form)
-            ->copy_keys(
-                qw(street city)
-            )
-            ->copy_modify(
-                country_code => sub {
-                    return $_ eq 'D' ? 'DE' : $_;
-                },
-            ->map_keys(
-                zip => zip_code,
-            )
-            ->merge_hash(
-                name => "$form->{first_name} $form->{family_name}",
-            )
-            ->source_ref($bar)
-            ->copy_keys(
-                qw(account),
-                sub {
-                    my $obj = shift;
-                    my $method = "get_$_";
-                    return $obj->source_ref->$method,
-                },
-            )
-            ->source_ref($mail)
-            ->copy_keys(
-                qw(name address),
-                sub {
-                   return "mail_$_";
-                },
-            )
-            ->target
+        Hash::Map->combine(
+            Hash::Map
+                ->source_ref($form)
+                ->copy_keys(
+                    qw(street city)
+                )
+                ->copy_modify(
+                    country_code => sub {
+                        return $_ eq 'D' ? 'DE' : $_;
+                    },
+                ->map_keys(
+                    zip => zip_code,
+                )
+                ->merge_hash(
+                    name => "$form->{first_name} $form->{family_name}",
+                ),
+            Hash::Map
+                ->source_ref($bar)
+                ->copy_keys(
+                    qw(account),
+                    sub {
+                        my $obj = shift;
+                        my $method = "get_$_";
+                        return $obj->source_ref->$method,
+                    },
+                ),
+            Hash::Map
+                ->source_ref($mail)
+                ->copy_keys(
+                    qw(name address),
+                    sub {
+                        return "mail_$_";
+                    },
+                ),
+        )->target
     );
 
 =head2 Functional interface
@@ -706,7 +732,7 @@ Otherwise use method target_ref.
 
     %target = $obj->target;
 
-This method is able to construct the object first
+This method is able to construct the object first.
 
     Hash::Map->target(...);
 
@@ -718,7 +744,7 @@ Set or get the target hash using a hash reference.
 
     $target_hashref = $obj->target_ref;
 
-This method is able to construct the object first
+This method is able to construct the object first.
 
     Hash::Map->target_ref(...);
 
@@ -727,13 +753,13 @@ This method is able to construct the object first
 Set or get the source hash.
 
 Can not set an empty hash, but this is the default.
-Otherwise use method target_ref.
+Otherwise use method source_ref.
 
     $obj = $obj->source(%source);
 
     %source = $obj->source;
 
-This method is able to construct the object first
+This method is able to construct the object first.
 
     Hash::Map->source(...);
 
@@ -745,9 +771,19 @@ Set or get the source hash using a hash reference.
 
     $source_hashref = $obj->source_ref;
 
-This method is able to construct the object first
+This method is able to construct the object first.
 
     Hash::Map->source_ref(...);
+
+=head2 method combine
+
+Merge targets of other Hash::Map objects into $obj target.
+
+    $obj = $obj->combine(@objects);
+
+This method is able to construct the object first.
+
+    Hash::Map->combine(...);
 
 =head2 method clone_target
 
@@ -942,7 +978,7 @@ Return the new value.
 Similar to method map_modify.
 Only the given parameter is a array reference and not a array.
 
-    $obj = $obj->map_modify([
+    $obj = $obj->map_modify_ref([
         source_key1 => target_key1 => $code_ref1,
         ...
     ]);
@@ -964,10 +1000,10 @@ Return the new value.
 
 =head2 method map_modify_identical_ref
 
-Similar to method map_modify.
+Similar to method map_modify_identical.
 Only the given parameter is a array reference and not a array.
 
-    $obj = $obj->map_modify(
+    $obj = $obj->map_modify_identical_ref(
         {
             source_key1 => target_key1,
             ...

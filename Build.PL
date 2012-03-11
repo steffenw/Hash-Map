@@ -29,7 +29,7 @@ Module::Build->new(
         'Test::Pod::Coverage' => '1.04',
     },
     create_makefile_pl   => 'traditional',
-    recursive_test_files => 1,
+    recursive_test_files => 0,
     add_to_cleanup       => [ qw(
         META.yml *.bak *.gz Makefile.PL
     ) ],

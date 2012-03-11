@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 48 + 1;
+use Test::More tests => 50 + 1;
 use Test::NoWarnings;
 use Test::Differences;
 
@@ -38,6 +38,31 @@ BEGIN {
         scalar $package->source(s => 1),
         $package,
         'constructor source',
+    );
+    isa_ok(
+        scalar $package->combine(),
+        $package,
+        'constructor combine',
+    );
+}
+
+# combine
+{
+    my $obj = Hash::Map->target(t1 => 11, t2 => 12);
+
+    $obj->combine(
+        Hash::Map->target(t2 => 22, t3 => 23),
+        Hash::Map->target(t3 => 33, t4 => 34),
+    );
+    eq_or_diff(
+        { $obj->target },
+        {
+            t1 => 11,
+            t2 => 22,
+            t3 => 33,
+            t4 => 34,
+        },
+        'combined target',
     );
 }
 
