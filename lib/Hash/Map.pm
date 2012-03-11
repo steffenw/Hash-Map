@@ -3,7 +3,7 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 
 use Carp qw(confess);
 use Clone qw(clone);
@@ -378,7 +378,7 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.004
+0.005
 
 =head1 SYNOPSIS
 
@@ -600,13 +600,10 @@ shorter written as:
     Hash::Map->source_ref(...);
     Hash::Map->combine(...);
 
-=head1 DESCRIPTION
+=head1 EXAMPLE
 
-For array manipulation we have map, for hashes not really.
-This was the reason to create this module.
-
-The fuctional interface is wrapped around the OO inferface.
-Not all can be implemented functional.
+Inside of this Distribution is a directory named example.
+Run this *.pl files.
 
 =head1 Code example
 
@@ -646,20 +643,18 @@ Now we can write:
                     country_code => sub {
                         return $_ eq 'D' ? 'DE' : $_;
                     },
+                )
                 ->map_keys(
-                    zip => zip_code,
+                    zip => 'zip_code',
                 )
                 ->merge_hash(
                     name => "$form->{first_name} $form->{family_name}",
                 ),
             Hash::Map
                 ->source_ref($bar)
-                ->copy_keys(
-                    qw(account),
-                    sub {
-                        my $obj = shift;
-                        my $method = "get_$_";
-                        return $obj->source_ref->$method,
+                ->copy_modify(
+                    account => sub {
+                        return $_->get_account;
                     },
                 ),
             Hash::Map
@@ -679,30 +674,36 @@ Now we can write:
 
     foo(
         hash_map(
+            # source_ref,
             $form,
+            # copy_keys
             [ qw(street city country_code) ],
             {
+                # modify
                 country_code => sub {
-                    return $_ eq 'D' ? 'DE'; $_;
+                    return $_ eq 'D' ? 'DE' : $_;
                 },
-                zip_code     => 'zip',
+                # map_keys
+                zip => 'zip_code',
             },
         ),
+        # merge_hash
         name => "$form->{first_name} $form->{family_name}",
         hash_map(
             $bar,
-            [
-                qw(account),
-                sub {
-                    my $obj    = shift;
-                    my $method = "get_$key";
-                    return $obj->source_ref->$method;
+            # copy_keys
+            [ qw(account) ],
+            {
+                # modify
+                account => sub {
+                    return $_->get_account;
                 },
-            ]
+            },
         ),
         hash_map(
             $mail,
             [
+                # copy_keys
                 qw(name address),
                 sub {
                     return "mail_$_";
@@ -710,6 +711,14 @@ Now we can write:
             ],
         ),
     );
+
+=head1 DESCRIPTION
+
+For array manipulation we have map, for hashes not really.
+This was the reason to create this module.
+
+The fuctional interface is wrapped around the OO inferface.
+Not all can be implemented functional.
 
 =head1 SUBROUTINES/METHODS
 
