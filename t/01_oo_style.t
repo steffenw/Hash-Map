@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 50 + 1;
+use Test::More tests => 56 + 1;
 use Test::NoWarnings;
 use Test::Differences;
 
@@ -30,6 +30,11 @@ BEGIN {
         'constructor target',
     );
     isa_ok(
+        scalar $package->set_target,
+        $package,
+        'constructor set_target',
+    );
+    isa_ok(
         scalar $package->source_ref({s => 1}),
         $package,
         'constructor source_ref',
@@ -40,10 +45,44 @@ BEGIN {
         'constructor source',
     );
     isa_ok(
-        scalar $package->combine(),
+        scalar $package->set_source,
+        $package,
+        'constructor set_source',
+    );
+    isa_ok(
+        scalar $package->combine,
         $package,
         'constructor combine',
     );
+}
+
+# set_source, set_target
+{
+    my $obj = Hash::Map
+        ->set_source(s => 11)
+        ->set_target(t => 12);
+    eq_or_diff(  
+        $obj->source_ref,
+        { s => 11 },
+        'data of set_souce',
+    );    
+    eq_or_diff(  
+        $obj->target_ref,
+        { t => 12 },
+        'data of set_target',
+    );    
+    $obj->set_source;
+    eq_or_diff(  
+        $obj->source_ref,
+        {},
+        'data of empty set_souce',
+    );    
+    $obj->set_source(s => 11)->set_target;
+    eq_or_diff(  
+        $obj->target_ref,
+        {},
+        'data of empty set_target',
+    );    
 }
 
 # combine

@@ -3,7 +3,7 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.005';
+our $VERSION = '0.006';
 
 use Carp qw(confess);
 use Clone qw(clone);
@@ -39,22 +39,28 @@ sub _hashref {
 sub _hash {
     my ($self, $key, @more) = @_;
 
-    if (@more) {
-        my $hashref;
-        try {
-            $hashref = { @more };
-        }
-        catch {
-            confess 'Hash expected ', $_;
-        };
-        if ( ! blessed $self ) {
-            $self = $self->new; # this method used as constructor
-        }
-        $self->_hashref($key, $hashref);
-        return $self;
-    }
+    @more
+        and return $self->_set_hash($key, @more);
 
     return %{ $self->_hashref($key) };
+}
+
+sub _set_hash {
+    my ($self, $key, @more) = @_;
+
+    my $hashref;
+    try {
+        $hashref = { @more };
+    }
+    catch {
+        confess 'Hash expected ', $_;
+    };
+    if ( ! blessed $self ) {
+        $self = $self->new; # this method used as constructor
+    }
+    $self->_hashref($key, $hashref);
+
+    return $self;
 }
 
 ## no critic (ArgUnpacking);
@@ -62,6 +68,8 @@ sub target_ref { return shift->_hashref(target => @_) }
 sub source_ref { return shift->_hashref(source => @_) }
 sub target     { return shift->_hash(target => @_) }
 sub source     { return shift->_hash(source => @_) }
+sub set_target { return shift->_set_hash(target => @_) }
+sub set_source { return shift->_set_hash(source => @_) }
 ## use critic (ArgUnpacking);
 
 sub combine {
@@ -378,7 +386,7 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.005
+0.006
 
 =head1 SYNOPSIS
 
@@ -399,13 +407,15 @@ It is typical used for setter or worker methods.
 
     require Hash::Map;
 
-    # Constructor typical not called directly.
-    # Methods "target", "target_ref", "source", "source_ref"
-    # and combine are alternative constructors.
+    # The constructor "new" is typical not called directly.
+    # Methods "target", "set_target", "target_ref",
+    # "source", "set_source", "source_ref"
+    # and "combine" are alternative constructors.
     my $obj = Hash::Map->new;
 
     # set target hash
     $obj = $obj->target(a => 1);
+    $obj = $obj->set_target(a => 1);
     $obj = $obj->target_ref({a => 1});
 
     # get target hash (no set parameters)
@@ -414,6 +424,7 @@ It is typical used for setter or worker methods.
 
     # set source hash
     $obj = $obj->source(b => 2, c => 3);
+    $obj = $obj->set_source(b => 2, c => 3);
     $obj = $obj->source_ref({b => 2, c => 3});
 
     # get source hash (no set parameters)
@@ -558,6 +569,30 @@ It is typical used for setter or worker methods.
         },
     );
 
+=head2 Automatic construction
+
+Methods "target", "set_target", "target_ref",
+"source", "set_source", "source_ref" and "combine"
+can work as constructor too.
+
+    Hash::Map->new->target(...);
+    Hash::Map->new->set_target(...);
+    Hash::Map->new->target_ref(...);
+    Hash::Map->new->source(...);
+    Hash::Map->new->set_source(...);
+    Hash::Map->new->source_ref(...);
+    Hash::Map->new->combine(...);
+
+shorter written as:
+
+    Hash::Map->target(...);
+    Hash::Map->set_target(...);
+    Hash::Map->target_ref(...);
+    Hash::Map->source(...);
+    Hash::Map->set_source(...);
+    Hash::Map->source_ref(...);
+    Hash::Map->combine(...);
+
 =head2 Functional style
 
     use Hash::Map qw(hash_map hashref_map);
@@ -580,25 +615,6 @@ Similar, only the method name and return value has changed.
         $source_hashref,
         ...
     );
-
-=head2 Automatic construction
-
-Methods "target", "target_ref", "source", "source_ref" and "combine"
-can work as constructor too.
-
-    Hash::Map->new->target(...);
-    Hash::Map->new->target_ref(...);
-    Hash::Map->new->source(...);
-    Hash::Map->new->source_ref(...);
-    Hash::Map->new->combine(...);
-
-shorter written as:
-
-    Hash::Map->target(...);
-    Hash::Map->target_ref(...);
-    Hash::Map->source(...);
-    Hash::Map->source_ref(...);
-    Hash::Map->combine(...);
 
 =head1 EXAMPLE
 
@@ -730,20 +746,22 @@ A simple constructor without any parameters.
 
 Typical you don't call method new directly.
 
-=head2 method target
+=head2 method target and set_target
 
 Set or get the target hash.
 
-Can not set an empty hash, but this is the default.
-Otherwise use method target_ref.
+Method "target" can not set an empty hash, but this is the default.
+Otherwise use method "set_target" or "target_ref".
 
     $obj = $obj->target(%target);
+    $obj = $obj->set_target(%target); # if %target is or can be empty
 
     %target = $obj->target;
 
 This method is able to construct the object first.
 
     Hash::Map->target(...);
+    Hash::Map->set_target(...);
 
 =head2 method target_ref
 
@@ -757,20 +775,22 @@ This method is able to construct the object first.
 
     Hash::Map->target_ref(...);
 
-=head2 method source
+=head2 method source and set_source
 
 Set or get the source hash.
 
-Can not set an empty hash, but this is the default.
-Otherwise use method source_ref.
+Method "source" can not set an empty hash, but this is the default.
+Otherwise use method "set_source" or "source_ref".
 
     $obj = $obj->source(%source);
+    $obj = $obj->set_source(%source); # if %source is or can be empty
 
     %source = $obj->source;
 
 This method is able to construct the object first.
 
     Hash::Map->source(...);
+    Hash::Map->set_source(...);
 
 =head2 method source_ref
 

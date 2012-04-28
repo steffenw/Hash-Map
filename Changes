@@ -1,5 +1,9 @@
 Revision history for Perl extension Hash::Map.
 
+0.006  Sat Apr 28 14:30:00 2012
+- added methods set_source and set_target
+  to be able to set empty hashes or dynamic sized hashes
+
 0.005  Sun Mar 11 20:15:00 2012
 - fixed code examples in Pod
 - added example scripts
