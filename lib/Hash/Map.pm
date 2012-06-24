@@ -3,7 +3,7 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.006';
+our $VERSION = '0.007';
 
 use Carp qw(confess);
 use Clone qw(clone);
@@ -64,12 +64,14 @@ sub _set_hash {
 }
 
 ## no critic (ArgUnpacking);
-sub target_ref { return shift->_hashref(target => @_) }
-sub source_ref { return shift->_hashref(source => @_) }
-sub target     { return shift->_hash(target => @_) }
-sub source     { return shift->_hash(source => @_) }
-sub set_target { return shift->_set_hash(target => @_) }
-sub set_source { return shift->_set_hash(source => @_) }
+sub target_ref     { return shift->_hashref(target => @_) }
+sub source_ref     { return shift->_hashref(source => @_) }
+sub set_target_ref { return shift->_hashref(target => @_) }
+sub set_source_ref { return shift->_hashref(source => @_) }
+sub target         { return shift->_hash(target => @_) }
+sub source         { return shift->_hash(source => @_) }
+sub set_target     { return shift->_set_hash(target => @_) }
+sub set_source     { return shift->_set_hash(source => @_) }
 ## use critic (ArgUnpacking);
 
 sub combine {
@@ -386,7 +388,7 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.006
+0.007
 
 =head1 SYNOPSIS
 
@@ -738,71 +740,81 @@ Not all can be implemented functional.
 
 =head1 SUBROUTINES/METHODS
 
+The methods are existing as normal name and with postfix "_ref".
+The idea is that user code should be clear and free of noise like:
+
+    $obj->name_ref( $hashref )
+    $obj->name( %hash )
+    # instaed of
+    $obj->name( %{$hashref} )
+    $obj->name_ref( \%hash )
+
+    %hash     = $obj->target;
+    $hash_ref = $obj->target_ref;
+    # instead of
+    %hash     = %{ $obj->target_ref };
+    $hash_ref = { $obj->target };
+
 =head2 method new
 
 A simple constructor without any parameters.
 
     my $obj = Hash::Map->new;
 
-Typical you don't call method new directly.
+Typical you don't call method "new" directly.
 
-=head2 method target and set_target
+=head2 method target, target_ref, set_target and set_target_ref
 
 Set or get the target hash.
 
 Method "target" can not set an empty hash, but this is the default.
-Otherwise use method "set_target" or "target_ref".
+Otherwise use method "set_target".
 
     $obj = $obj->target(%target);
-    $obj = $obj->set_target(%target); # if %target is or can be empty
-
-    %target = $obj->target;
-
-This method is able to construct the object first.
-
-    Hash::Map->target(...);
-    Hash::Map->set_target(...);
-
-=head2 method target_ref
-
-Set or get the target hash using a hash reference.
-
     $obj = $obj->target_ref($target_hashref);
 
+    # if %target is or can be empty
+    $obj = $obj->set_target(%target);
+    # method exists for the sake of completeness
+    $obj = $obj->set_target_ref($target_ref);
+
+    %target         = $obj->target;
     $target_hashref = $obj->target_ref;
 
-This method is able to construct the object first.
+This methods are able to construct the object first.
 
+    Hash::Map->target(...);
     Hash::Map->target_ref(...);
+    Hash::Map->set_target(...);
+    Hash::Map->set_target_ref(...);
 
-=head2 method source and set_source
+Typical the source is set and not the target.
+But it makes no sense to set the source
+and copy then all from source.
+
+=head2 method source, source_ref, set_source and set_source_ref
 
 Set or get the source hash.
 
 Method "source" can not set an empty hash, but this is the default.
-Otherwise use method "set_source" or "source_ref".
+Otherwise use method "set_source".
 
     $obj = $obj->source(%source);
-    $obj = $obj->set_source(%source); # if %source is or can be empty
-
-    %source = $obj->source;
-
-This method is able to construct the object first.
-
-    Hash::Map->source(...);
-    Hash::Map->set_source(...);
-
-=head2 method source_ref
-
-Set or get the source hash using a hash reference.
-
     $obj = $obj->source_ref($source_hashref);
+    # if %source is or can be empty
+    $obj = $obj->set_source(%source);
+    # method exists for the sake of completeness
+    $obj = $obj->set_source_ref($target_ref);
 
+    %source         = $obj->source;
     $source_hashref = $obj->source_ref;
 
-This method is able to construct the object first.
+This methods are able to construct the object first.
 
+    Hash::Map->source(...);
     Hash::Map->source_ref(...);
+    Hash::Map->set_source(...);
+    Hash::Map->set_source_ref(...);
 
 =head2 method combine
 
@@ -814,11 +826,16 @@ This method is able to construct the object first.
 
     Hash::Map->combine(...);
 
+Typical used for clear code to prevent the change of the source hash/hashref.
+
 =head2 method clone_target
 
 Using Module Clone to clone the target hash.
 
     $obj = $obj->clone_target;
+
+Only used after set of target hash reference
+to prevent manpulations backwards.
 
 =head2 method clone_source
 
@@ -826,23 +843,21 @@ Using Module Clone to clone the source hash.
 
     $obj = $obj->clone_source;
 
-=head2 method delete_keys
+This method exists for the sake of completeness.
+
+=head2 method delete_keys and delete_keys_ref
 
 Delete keys in target hash.
 
     $obj = $obj->delete_keys(@keys);
-
-=head2 method delete_keys_ref
-
-Delete keys in target hash.
-
     $obj = $obj->delete_keys_ref($keys_array_ref);
 
-=head2 method copy_keys
+=head2 method copy_keys and copy_keys_ref
 
 Copy data from source to target hash using keys.
 
     $obj = $obj->copy_keys(@keys);
+    $obj = $obj->copy_keys_ref($keys_array_ref);
 
 And rename all keys during copy.
 
@@ -854,19 +869,6 @@ And rename all keys during copy.
             return "new $key";
         },
     );
-
-The first parameter of the callback subroutine is the object itself.
-The current key is in $_.
-Return the new key.
-
-=head2 method copy_keys_ref
-
-Copy data from source to target hash using keys.
-
-    $obj = $obj->copy_keys_ref($keys_array_ref);
-
-And rename all keys during copy.
-
     $obj = $obj->copy_keys_ref(
         $keys_array_ref,
         sub {
@@ -880,35 +882,52 @@ The first parameter of the callback subroutine is the object itself.
 The current key is in $_.
 Return the new key.
 
-=head2 method map_keys
+Replaces code like this:
+
+    %target = (
+        a => $source->{a},
+        b => $source->{b},
+        ...
+    );
+    %target = (
+        p_a => $source->{a},
+        p_b => $source->{b},
+        ...
+    );
+
+=head2 method map_keys and map_keys_ref
 
 Copy data from source hash (key is key of map)
 to target hash (key is value of map).
 
     $obj = $obj->map_keys(%map);
-
-=head2 method map_keys_ref
-
-Copy data from source hash (key is key of map)
-to target hash (key is value of map).
-
     $obj = $obj->map_keys_ref($map_hashref);
 
-=head2 method merge_hash
+Replaces code like this:
+
+    %target = (
+        a => $source->{z},
+        b => $source->{y},
+        ...
+    );
+
+=head2 method merge_hash and merge_hashref
 
 Merge the given hash into the target hash.
 
     $obj = $obj->merge_hash(%hash);
-
-=head2 method merge_hashref
-
-Merge the given hash into the target hash.
-
     $obj = $obj->merge_hashref($hashref);
 
-=head2 method modify
+Replaces code like this:
 
-Modify the target hash inplace by given key and code for.
+    %target = (
+        %hash,
+        ...
+    );
+
+=head2 method modify and modify_ref
+
+Modify the target hash inplace by given key and code for that.
 
 The first parameter of the callback subroutine is the object itself.
 The old value of the target hash is in $_;
@@ -918,20 +937,24 @@ Return the new value.
         key1 => $code_ref1,
         ...
     );
-
-=head2 method modify_ref
-
-Similar to method modify.
-Only the given parameter is a hash reference and not a hash.
-
     $obj = $obj->modify_ref({
         key1 => $code_ref1,
         ...
     });
 
-=head2 method copy_modify
+Typical the combinated methods are used:
+"copy_modify",
+"copy_modify_ref",
+"copy_modify_identical",
+"copy_modify_identical_ref",
+"map_modify",
+"map_modify_ref",
+"map_modify_identical" and
+"map_modify_identical_ref".
 
-This is a combination of copy_keys and modify.
+=head2 method copy_modify and copy_modify_ref
+
+This is a combination of method "copy_keys" and "modify".
 
 The first parameter of the callback subroutine is the object itself.
 The old value of the target hash is in $_;
@@ -941,26 +964,19 @@ Return the new value.
         key1 => $code_ref1,
         ...
     );
-
-It is not possible to rename all keys during copy.
-Use method map_modify instead.
-
-=head2 method copy_modify_ref
-
-Similar to method copy_modify.
-Only the given parameter is a hash reference and not a hash.
-
     $obj = $obj->copy_modify_ref({
         key1 => $code_ref1,
         ...
     });
 
 It is not possible to rename all keys during copy.
-Use method map_modify_ref instead.
+Use method "map_modify" or "map_modify_ref" instead.
 
-=head2 method copy_modify_identical
+This method exists for the sake of completeness.
 
-This is another combination of copy_keys and modify.
+=head2 method copy_modify_identical and copy_modify_identical_ref
+
+This is another combination of method "copy_keys" and "modify".
 All values are modified using a common code reference.
 
 The 1st parameter of the callback subroutine is the object itself.
@@ -972,26 +988,30 @@ Return the new value.
         @keys,
         $code_ref,
     );
-
-It is not possible to rename all keys during copy.
-Use method map_modify_identical instead.
-
-=head2 method copy_modify_identical_ref
-
-Similar to method copy_modify_identical.
-Only the given parameter is an array reference and not an array.
-
     $obj = $obj->copy_modify_identical_ref(
         $keys_array_ref,
         $code_ref,
     );
 
 It is not possible to rename all keys during copy.
-Use method map_modify_identical_ref instead.
+Use method "map_modify_identical" or "map_modify_identical" instead.
 
-=head2 method map_modify
+Replaces code like this:
 
-This is a combination of map_keys and modify.
+    %target = (
+        a => $foo->bar('a'),
+        b => $foo->bar('b'),
+        ...
+    );
+    %target = (
+        a => $foo->a,
+        b => $foo->b,
+        ...
+    );
+
+=head2 method map_modify and map_modify_ref
+
+This is a combination of method "map_keys" and "modify".
 
 The first parameter of the callback subroutine is the object itself.
 The old value of the target hash is in $_;
@@ -1001,20 +1021,16 @@ Return the new value.
         source_key1 => target_key1 => $code_ref1,
         ...
     );
-
-=head2 method map_modify_ref
-
-Similar to method map_modify.
-Only the given parameter is a array reference and not a array.
-
     $obj = $obj->map_modify_ref([
         source_key1 => target_key1 => $code_ref1,
         ...
     ]);
 
-=head2 method map_modify_identical
+This method exists for the sake of completeness.
 
-This is a combination of map_keys and modify.
+=head2 method map_modify_identical and map_modify_identical_ref
+
+This is a combination of method "map_keys" and "modify".
 
 The 1st parameter of the callback subroutine is the object itself.
 The 2nd parameter is the source key and the 3rd parameter is the target key.
@@ -1026,18 +1042,25 @@ Return the new value.
         ...
         $code_ref,
     );
-
-=head2 method map_modify_identical_ref
-
-Similar to method map_modify_identical.
-Only the given parameter is a array reference and not a array.
-
     $obj = $obj->map_modify_identical_ref(
         {
             source_key1 => target_key1,
             ...
         },
         $code_ref,
+    );
+
+Replaces code like this:
+
+    %target = (
+        a => $foo->bar('z'),
+        b => $foo->bar('y'),
+        ...
+    );
+    %target = (
+        a => $foo->z,
+        b => $foo->y,
+        ...
     );
 
 =head2 subroutine hash_map
@@ -1058,7 +1081,7 @@ This subroutine is for the fuctional interface only.
 
 =head2 subroutine hashref_map
 
-Similar, only the method name and return value has chenged.
+Similar, only the subroutine name and the return value has chenged.
 
     $target_hashref = hashref_map(
         $source_hashref,

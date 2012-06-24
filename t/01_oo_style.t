@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 56 + 1;
+use Test::More tests => 60 + 1;
 use Test::NoWarnings;
 use Test::Differences;
 
@@ -25,6 +25,11 @@ BEGIN {
         'constructor target_ref',
     );
     isa_ok(
+        scalar $package->set_target_ref({t => 1}),
+        $package,
+        'constructor target_ref',
+    );
+    isa_ok(
         scalar $package->target(t => 1),
         $package,
         'constructor target',
@@ -36,6 +41,11 @@ BEGIN {
     );
     isa_ok(
         scalar $package->source_ref({s => 1}),
+        $package,
+        'constructor source_ref',
+    );
+    isa_ok(
+        scalar $package->set_source_ref({s => 1}),
         $package,
         'constructor source_ref',
     );
@@ -61,28 +71,42 @@ BEGIN {
     my $obj = Hash::Map
         ->set_source(s => 11)
         ->set_target(t => 12);
-    eq_or_diff(  
+    eq_or_diff(
         $obj->source_ref,
         { s => 11 },
         'data of set_souce',
-    );    
-    eq_or_diff(  
+    );
+    eq_or_diff(
         $obj->target_ref,
         { t => 12 },
         'data of set_target',
-    );    
+    );
     $obj->set_source;
-    eq_or_diff(  
+    eq_or_diff(
         $obj->source_ref,
         {},
         'data of empty set_souce',
-    );    
-    $obj->set_source(s => 11)->set_target;
-    eq_or_diff(  
+    );
+    $obj
+        ->set_target
+        ->set_source_ref({s => 21});
+    eq_or_diff(
         $obj->target_ref,
         {},
         'data of empty set_target',
-    );    
+    );
+    eq_or_diff(
+        $obj->source_ref,
+        { s => 21 },
+        'data of empty set_target',
+    );
+    $obj
+        ->set_target_ref({t => 22});
+    eq_or_diff(
+        $obj->target_ref,
+        { t => 22 },
+        'data of empty set_target',
+    );
 }
 
 # combine
@@ -146,9 +170,9 @@ BEGIN {
 {
     eq_or_diff(
         scalar Hash::Map
-                ->target(a => 11, b => 12, c => 13, d => 14)
-                ->delete_keys(qw(a c))
-                ->target_ref,
+            ->target(a => 11, b => 12, c => 13, d => 14)
+            ->delete_keys(qw(a c))
+            ->target_ref,
         {b => 12, d => 14},
         'delete_keys',
     );

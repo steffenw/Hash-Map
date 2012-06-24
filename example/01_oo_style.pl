@@ -18,8 +18,8 @@ my $form = { qw(
     family_name  Winkler
 ) };
 
-# example bar object
-my $bar = {
+# example account object
+my $account = {
     account => ( bless { account  => 'STEFFENW' }, __PACKAGE__ ),
 };
 sub get_account { my $self = shift; return $self->{account} }
@@ -49,7 +49,7 @@ my $hash_map = Hash::Map->combine(
             name => "$form->{first_name} $form->{family_name}",
         ),
     Hash::Map
-        ->source_ref($bar)
+        ->source_ref($account)
         ->copy_modify(
             account => sub {
                 return $_->get_account;
