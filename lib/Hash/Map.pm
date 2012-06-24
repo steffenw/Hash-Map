@@ -410,8 +410,8 @@ It is typical used for setter or worker methods.
     require Hash::Map;
 
     # The constructor "new" is typical not called directly.
-    # Methods "target", "set_target", "target_ref",
-    # "source", "set_source", "source_ref"
+    # Methods "target", "set_target", "target_ref", "set_target_ref",
+    # "source", "set_source", "source_ref", "set_source_ref"
     # and "combine" are alternative constructors.
     my $obj = Hash::Map->new;
 
@@ -579,16 +579,18 @@ It is typical used for setter or worker methods.
 
 =head2 Automatic construction
 
-Methods "target", "set_target", "target_ref",
-"source", "set_source", "source_ref" and "combine"
+Methods "target", "set_target", "target_ref", "set_target_ref"
+"source", "set_source", "source_ref", "set_source_ref" and "combine"
 can work as constructor too.
 
     Hash::Map->new->target(...);
     Hash::Map->new->set_target(...);
     Hash::Map->new->target_ref(...);
+    Hash::Map->new->set_target_ref(...);
     Hash::Map->new->source(...);
     Hash::Map->new->set_source(...);
     Hash::Map->new->source_ref(...);
+    Hash::Map->new->set_source_ref(...);
     Hash::Map->new->combine(...);
 
 shorter written as:
@@ -596,9 +598,11 @@ shorter written as:
     Hash::Map->target(...);
     Hash::Map->set_target(...);
     Hash::Map->target_ref(...);
+    Hash::Map->set_target_ref(...);
     Hash::Map->source(...);
     Hash::Map->set_source(...);
     Hash::Map->source_ref(...);
+    Hash::Map->set_source_ref(...);
     Hash::Map->combine(...);
 
 =head2 Functional style
@@ -749,11 +753,11 @@ Not all can be implemented functional.
 The methods are existing as normal name and with postfix "_ref".
 The idea is that user code should be clear and free of noise like:
 
-    $obj->name_ref( $hashref )
-    $obj->name( %hash )
+    $obj->name_ref( $hashref );
+    $obj->name( %hash );
     # instaed of
-    $obj->name( %{$hashref} )
-    $obj->name_ref( \%hash )
+    $obj->name( %{$hashref} );
+    $obj->name_ref( \%hash );
 
     %hash     = $obj->target;
     $hash_ref = $obj->target_ref;
