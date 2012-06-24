@@ -419,6 +419,7 @@ It is typical used for setter or worker methods.
     $obj = $obj->target(a => 1);
     $obj = $obj->set_target(a => 1);
     $obj = $obj->target_ref({a => 1});
+    $obj = $obj->set_target_ref({a => 1});
 
     # get target hash (no set parameters)
     $target = $obj->target;
@@ -428,6 +429,7 @@ It is typical used for setter or worker methods.
     $obj = $obj->source(b => 2, c => 3);
     $obj = $obj->set_source(b => 2, c => 3);
     $obj = $obj->source_ref({b => 2, c => 3});
+    $obj = $obj->set_source_ref({b => 2, c => 3});
 
     # get source hash (no set parameters)
     $source = $obj->source;
@@ -476,6 +478,8 @@ It is typical used for setter or worker methods.
     $obj = $obj->merge_hashref({d => 4, e => 5});
 
     # modify target inplace by given code
+    # Maybe the combined methods is what you are looking for,
+    # see method "copy_modify_identical" or "map_modify_identical".
     $obj = $obj->modify(
         f => sub {
             my $obj = shift;
@@ -496,6 +500,7 @@ It is typical used for setter or worker methods.
     # copy data from source to target using keys
     # and then
     # modify target inplace by given code
+    # Maybe method "copy_modify_idientical" is what you are looking for.
     $obj = $obj->copy_modify(
         f => sub {
             my $obj = shift;
@@ -532,6 +537,7 @@ It is typical used for setter or worker methods.
     # copy data from source (key of map) to target (value of map)
     # and then
     # modify target inplace by given code
+    # Maybe method "map_modify_idientical" is what you are looking for.
     $obj = $obj->map_modify(
         f => ff => sub {
             my $obj = shift;
