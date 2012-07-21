@@ -1,4 +1,4 @@
-<SOFTPKG NAME="Hash-Map" VERSION="0.007">
+<SOFTPKG NAME="Hash-Map" VERSION="0.008">
     <ABSTRACT>Hash::Map - Manipulate hashes map like</ABSTRACT>
     <AUTHOR>Steffen Winkler &lt;steffenw at cpan.org&gt;</AUTHOR>
     <IMPLEMENTATION>
@@ -8,6 +8,6 @@
         <REQUIRE NAME="version::" VERSION="0" />
         <REQUIRE NAME="Clone::" VERSION="0" />
         <REQUIRE NAME="Carp::" VERSION="0" />
-        <CODEBASE HREF="PPM-Hash-Map-0.007.tar.gz" />
+        <CODEBASE HREF="PPM-Hash-Map-0.008.tar.gz" />
     </IMPLEMENTATION>
 </SOFTPKG>
