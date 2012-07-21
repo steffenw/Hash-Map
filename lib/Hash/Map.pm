@@ -3,7 +3,7 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.007';
+our $VERSION = '0.008';
 
 use Carp qw(confess);
 use Clone qw(clone);
@@ -14,8 +14,8 @@ use Try::Tiny;
 sub new {
     return bless
         {
-            target => {},
             source => {},
+            target => {},
         },
         shift;
 }
@@ -64,14 +64,14 @@ sub _set_hash {
 }
 
 ## no critic (ArgUnpacking);
-sub target_ref     { return shift->_hashref(target => @_) }
 sub source_ref     { return shift->_hashref(source => @_) }
-sub set_target_ref { return shift->_hashref(target => @_) }
+sub target_ref     { return shift->_hashref(target => @_) }
 sub set_source_ref { return shift->_hashref(source => @_) }
-sub target         { return shift->_hash(target => @_) }
+sub set_target_ref { return shift->_hashref(target => @_) }
 sub source         { return shift->_hash(source => @_) }
-sub set_target     { return shift->_set_hash(target => @_) }
+sub target         { return shift->_hash(target => @_) }
 sub set_source     { return shift->_set_hash(source => @_) }
+sub set_target     { return shift->_set_hash(target => @_) }
 ## use critic (ArgUnpacking);
 
 sub combine {
@@ -87,18 +87,18 @@ sub combine {
     return $self;
 }
 
-sub clone_target {
-    my $self = shift;
-
-    $self->target_ref( clone( $self->target_ref ) );
-
-    return $self;
-}
-
 sub clone_source {
     my $self = shift;
 
     $self->source_ref( clone( $self->source_ref ) );
+
+    return $self;
+}
+
+sub clone_target {
+    my $self = shift;
+
+    $self->target_ref( clone( $self->target_ref ) );
 
     return $self;
 }
@@ -388,382 +388,103 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.007
+0.008
 
 =head1 SYNOPSIS
 
-=head2 Hint
-
-When I write
-
-    $obj = $obj->this_method;
-
-I mean, that the Hash::Map object itself will be returned.
-So it is possible to build chains like that:
-
-    $obj->this_method->next_method;
-
-It is typical used for setter or worker methods.
-
-=head2 OO style
-
     require Hash::Map;
 
-    # The constructor "new" is typical not called directly.
-    # Methods "target", "set_target", "target_ref", "set_target_ref",
-    # "source", "set_source", "source_ref", "set_source_ref"
-    # and "combine" are alternative constructors.
-    my $obj = Hash::Map->new;
+Instead of
 
-    # set target hash
-    $obj = $obj->target(a => 1);
-    $obj = $obj->set_target(a => 1);
-    $obj = $obj->target_ref({a => 1});
-    $obj = $obj->set_target_ref({a => 1});
-
-    # get target hash (no set parameters)
-    $target = $obj->target;
-    $target = $obj->target_ref;
-
-    # set source hash
-    $obj = $obj->source(b => 2, c => 3);
-    $obj = $obj->set_source(b => 2, c => 3);
-    $obj = $obj->source_ref({b => 2, c => 3});
-    $obj = $obj->set_source_ref({b => 2, c => 3});
-
-    # get source hash (no set parameters)
-    $source = $obj->source;
-    $source = $obj->source_ref;
-
-    # combine - merge targets of other Hash::Map objects into $obj target
-    $obj = $obj->combine(@objects);
-
-    # clone target
-    $obj = $obj->clone_target;
-
-    # clone source
-    $obj = $obj->clone_source;
-
-    # delete keys in target
-    $obj = $obj->delete_keys( qw(x y) );
-    $obj = $obj->delete_keys_ref([ qw(x y) ]);
-
-    # copy data from source to target using keys
-    $obj = $obj->copy_keys(qw(b c))
-    $obj = $obj->copy_keys_ref([ qw(b c) ]);
-    # including a key rewrite rule as code reference
-    $obj = $obj->copy_keys(
-        qw(b c),
-        sub {
-            my $obj = shift;
-            my $key = $_;
-            return "new $key";
-        },
-    );
-    $obj = $obj->copy_keys_ref(
-        [ qw(b c) ],
-        sub {
-            my $obj = shift;
-            my $key = $_;
-            return "new $key";
-        },
+    %hash = (
+        a => $other->{a},
+        b => $other->{b},
+        c => $other->{c},
+        d => $other->{d},
+        e => $other->{e},
+        f => 'bla bla',
     );
 
-    # copy data from source (key of map) to target (value of map)
-    $obj = $obj->map_keys(b => 'bb', c => 'cc');
-    $obj = $obj->map_keys_ref({b => 'bb', c => 'cc'});
+write with map
 
-    # merge the given hash into target hash
-    $obj = $obj->merge_hash(d => 4, e => 5);
-    $obj = $obj->merge_hashref({d => 4, e => 5});
-
-    # modify target inplace by given code
-    # Maybe the combined methods is what you are looking for,
-    # see method "copy_modify_identical" or "map_modify_identical".
-    $obj = $obj->modify(
-        f => sub {
-            my $obj = shift;
-            my $current_value_of_key_f_in_target = $_;
-            return; # $target{f} will be undef because of scalar context
-        },
-        ...
-    );
-    $obj = $obj->modify_ref({
-        f => sub {
-            my $obj   = shift;
-            my $current_value_of_key_f_in_target = $_;
-            return "new $value";
-        },
-        ...
-    });
-
-    # copy data from source to target using keys
-    # and then
-    # modify target inplace by given code
-    # Maybe method "copy_modify_idientical" is what you are looking for.
-    $obj = $obj->copy_modify(
-        f => sub {
-            my $obj = shift;
-            my $current_value_of_key_f_in_target = $_;
-            return; # $target{f} will be undef because of scalar context
-        },
-        ...
-    );
-    $obj = $obj->copy_modify_ref({
-        f => sub {
-            my $obj   = shift;
-            my $current_value_of_key_f_in_target = $_;
-            return "new $value";
-        },
-        ...
-    });
-    $obj = $obj->copy_modify_identical(
-        qw(b c),
-        sub {
-            my $obj = shift;
-            my $current_value_of_each_key_in_target = $_;
-            return; # $target{key} will be undef because of scalar context
-        },
-    );
-    $obj->copy_modify_identical_ref(
-        [ qw(b c) ],
-        sub {
-            my $obj = shift;
-            my $current_value_of_each_key_in_target = $_;
-            return; # $target{key} will be undef because of scalar context
-        },
-    );
-
-    # copy data from source (key of map) to target (value of map)
-    # and then
-    # modify target inplace by given code
-    # Maybe method "map_modify_idientical" is what you are looking for.
-    $obj = $obj->map_modify(
-        f => ff => sub {
-            my $obj = shift;
-            my $current_value_of_key_f_in_source = $_;
-            return; # $target{ff} will be undef because of scalar context
-        },
-        ...
-    );
-    $obj = $obj->map_modify_ref([
-        f => ff => sub {
-            my $obj   = shift;
-            my $current_value_of_key_f_in_source = $_;
-            return "new $value";
-        },
-        ...
-    ]);
-    $obj = $obj->map_modify_identical(
+    %hash = (
         (
-            f => ff,
-            ...
+            map {
+                $_ => $other->{$_};
+            } 'a' .. 'e'
         ),
-        sub {
-            my $obj = shift;
-            my $current_value_of_each_key_in_source = $_;
-            return; # $target{key} will be undef because of scalar context
-        },
-    );
-    $obj = $obj->map_modify_identical_ref(
-        {
-            f => ff,
-            ...
-        },
-        sub {
-            my $obj   = shift;
-            my $current_value_of_each_key_in_source = $_;
-            return "new $value";
-        },
+        f => 'bla bla',
     );
 
-=head2 Automatic construction
+or more clear readable
 
-Methods "target", "set_target", "target_ref", "set_target_ref"
-"source", "set_source", "source_ref", "set_source_ref" and "combine"
-can work as constructor too.
+    %hash = Hash::Map
+        ->source_ref($other)
+        ->copy_keys('a' .. 'e')
+        ->merge_hash(f => 'bla bla')
+        ->target;
 
-    Hash::Map->new->target(...);
-    Hash::Map->new->set_target(...);
-    Hash::Map->new->target_ref(...);
-    Hash::Map->new->set_target_ref(...);
-    Hash::Map->new->source(...);
-    Hash::Map->new->set_source(...);
-    Hash::Map->new->source_ref(...);
-    Hash::Map->new->set_source_ref(...);
-    Hash::Map->new->combine(...);
+=head1 DESCRIPTION
 
-shorter written as:
+Often in code we find lots of copy/paste code
+during prepare a hash or hash reference.
+That data we got from other structures, objects or constants.
 
-    Hash::Map->target(...);
-    Hash::Map->set_target(...);
-    Hash::Map->target_ref(...);
-    Hash::Map->set_target_ref(...);
-    Hash::Map->source(...);
-    Hash::Map->set_source(...);
-    Hash::Map->source_ref(...);
-    Hash::Map->set_source_ref(...);
-    Hash::Map->combine(...);
+=over
 
-=head2 Functional style
+=item *
 
-    use Hash::Map qw(hash_map hashref_map);
+We map hashes that not match exactly to the expected API.
 
-    %target_hash = hash_map(
-        \%source_hash,
-        # The following references are sorted anyway.
-        # Running in order like written.
-        [ qw(key1 key2) ],               # copy_keys from source to target hash
-        [ qw(key3 key4), $code_ref ],    # copy_keys, code_ref to rename keys
-        {
-            source_key1 => 'target_key', # map_keys from source to target hash
-            source_key2 => $code_ref,    # modify values in target hash
-        },
-    );
+=item *
 
-Similar, only the method name and return value has changed.
+Or the method names, we call, matching not exactly to the hash keys.
 
-    $target_hashref = hashref_map(
-        $source_hashref,
-        ...
-    );
+=item *
+
+Sometimes we forgot to write C<scalar>
+if we call subroutines/methods for a hash value
+and risk to have a value as key.
+
+=item *
+
+We use C<map>, C<for>, C<map>/C<push>
+to build the expected hash or hash reference.
+
+=item *
+
+Accidentally we do not destroy the data we fetch.
+
+=item *
+
+We have to write C<defined>, C<? :> or C<do>.
+
+=back
+
+This Module lets you writing code without that copied noise.
+
+The goal of this module is to write clear code with less typing around.
+Less typing for the user needs lots of specialized methods in this module.
+
+The code in the SYNOPSIS
+is only a very simple but typical example to understand,
+why that module was written.
+
+Look at your existing code for lots of similar lines of hash key/value pairs.
+Then this module can help you.
+
+There is also a fuctional interface.
+That is wrapped around the OO inferface.
+Not all can be implemented functional.
+
+For more information read the L<tutorial|Hash::Map::tutorial>.
 
 =head1 EXAMPLE
 
 Inside of this Distribution is a directory named example.
 Run this *.pl files.
 
-=head1 Code example
-
-Don't be shocked about the big examples.
-
-If you have nearly 1 type of each mapping.
-Map it like before.
-Otherwise the module helps you to prevent: Don't repeat yourself.
-
-Often we read in code something like that:
-
-    foo(
-        street       => $form->{street},
-        city         => $form->{city},
-        country_code => $form->{country_code} eq 'D'
-                        ? 'DE'
-                        : $form->{country_code},
-        zip_code     => $form->{zip},
-        name         => "$form->{first_name} $form->{family_name}",
-        account      => $bar->get_account,
-        mail_name    => $mail->{name},
-        mail_address => $mail->{address},
-    );
-
-=head2 OO interface
-
-Now we can write:
-
-    foo(
-        Hash::Map->combine(
-            Hash::Map
-                ->source_ref($form)
-                ->copy_keys(
-                    qw(street city)
-                )
-                ->copy_modify(
-                    country_code => sub {
-                        return $_ eq 'D' ? 'DE' : $_;
-                    },
-                )
-                ->map_keys(
-                    zip => 'zip_code',
-                )
-                ->merge_hash(
-                    name => "$form->{first_name} $form->{family_name}",
-                ),
-            Hash::Map
-                ->source_ref($bar)
-                ->copy_modify(
-                    account => sub {
-                        return $_->get_account;
-                    },
-                ),
-            Hash::Map
-                ->source_ref($mail)
-                ->copy_keys(
-                    qw(name address),
-                    sub {
-                        return "mail_$_";
-                    },
-                ),
-        )->target
-    );
-
-=head2 Functional interface
-
-Now we can write:
-
-    foo(
-        hash_map(
-            # source_ref,
-            $form,
-            # copy_keys
-            [ qw(street city country_code) ],
-            {
-                # modify
-                country_code => sub {
-                    return $_ eq 'D' ? 'DE' : $_;
-                },
-                # map_keys
-                zip => 'zip_code',
-            },
-        ),
-        # merge_hash
-        name => "$form->{first_name} $form->{family_name}",
-        hash_map(
-            $bar,
-            # copy_keys
-            [ qw(account) ],
-            {
-                # modify
-                account => sub {
-                    return $_->get_account;
-                },
-            },
-        ),
-        hash_map(
-            $mail,
-            [
-                # copy_keys
-                qw(name address),
-                sub {
-                    return "mail_$_";
-                },
-            ],
-        ),
-    );
-
-=head1 DESCRIPTION
-
-For array manipulation we have map, for hashes not really.
-This was the reason to create this module.
-
-The fuctional interface is wrapped around the OO inferface.
-Not all can be implemented functional.
-
 =head1 SUBROUTINES/METHODS
-
-The methods are existing as normal name and with postfix "_ref".
-The idea is that user code should be clear and free of noise like:
-
-    $obj->name_ref( $hashref );
-    $obj->name( %hash );
-    # instaed of
-    $obj->name( %{$hashref} );
-    $obj->name_ref( \%hash );
-
-    %hash     = $obj->target;
-    $hash_ref = $obj->target_ref;
-    # instead of
-    %hash     = %{ $obj->target_ref };
-    $hash_ref = { $obj->target };
 
 =head2 method new
 
@@ -773,11 +494,35 @@ A simple constructor without any parameters.
 
 Typical you don't call method "new" directly.
 
+=head2 method source, source_ref, set_source and set_source_ref
+
+Set or get the source hash.
+
+Method "source" can not set an empty hash, but an empty hash is the default.
+Otherwise use method "set_source".
+
+    $obj = $obj->source(%source);
+    $obj = $obj->source_ref($source_hashref);
+    # if %source is or can be empty
+    $obj = $obj->set_source(%source);
+    # method exists for the sake of completeness
+    $obj = $obj->set_source_ref($target_ref);
+
+    %source         = $obj->source;
+    $source_hashref = $obj->source_ref;
+
+This methods are able to construct the object first.
+
+    Hash::Map->source(...);
+    Hash::Map->source_ref(...);
+    Hash::Map->set_source(...);
+    Hash::Map->set_source_ref(...);
+
 =head2 method target, target_ref, set_target and set_target_ref
 
 Set or get the target hash.
 
-Method "target" can not set an empty hash, but this is the default.
+Method "target" can not set an empty hash, but an empty hash is the default.
 Otherwise use method "set_target".
 
     $obj = $obj->target(%target);
@@ -802,41 +547,26 @@ Typical the source is set and not the target.
 But it makes no sense to set the source
 and copy then all from source.
 
-=head2 method source, source_ref, set_source and set_source_ref
-
-Set or get the source hash.
-
-Method "source" can not set an empty hash, but this is the default.
-Otherwise use method "set_source".
-
-    $obj = $obj->source(%source);
-    $obj = $obj->source_ref($source_hashref);
-    # if %source is or can be empty
-    $obj = $obj->set_source(%source);
-    # method exists for the sake of completeness
-    $obj = $obj->set_source_ref($target_ref);
-
-    %source         = $obj->source;
-    $source_hashref = $obj->source_ref;
-
-This methods are able to construct the object first.
-
-    Hash::Map->source(...);
-    Hash::Map->source_ref(...);
-    Hash::Map->set_source(...);
-    Hash::Map->set_source_ref(...);
-
 =head2 method combine
 
 Merge targets of other Hash::Map objects into $obj target.
 
-    $obj = $obj->combine(@objects);
+    $obj = $obj->combine(@hash_map_objects);
 
 This method is able to construct the object first.
 
     Hash::Map->combine(...);
 
 Typical used for clear code to prevent the change of the source hash/hashref.
+It's strongly readable if source is set more than one time.
+
+=head2 method clone_source
+
+Using Module Clone to clone the source hash.
+
+    $obj = $obj->clone_source;
+
+This method exists for the sake of completeness.
 
 =head2 method clone_target
 
@@ -846,14 +576,6 @@ Using Module Clone to clone the target hash.
 
 Only used after set of target hash reference
 to prevent manpulations backwards.
-
-=head2 method clone_source
-
-Using Module Clone to clone the source hash.
-
-    $obj = $obj->clone_source;
-
-This method exists for the sake of completeness.
 
 =head2 method delete_keys and delete_keys_ref
 
@@ -1128,7 +850,11 @@ none
 
 =head1 SEE ALSO
 
-map
+L<map|http://perldoc.perl.org/functions/map.html>
+
+L<Data::Visitor|Data::Visitor>
+
+L<tutorial|Hash::Map::tutorial>
 
 =head1 AUTHOR
 

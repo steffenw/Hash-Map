@@ -18,8 +18,8 @@ my $form = { qw(
     family_name  Winkler
 ) };
 
-# example bar object
-my $bar = {
+# example user object
+my $user = {
     account => ( bless { account  => 'STEFFENW' }, __PACKAGE__ ),
 };
 sub get_account { my $self = shift; return $self->{account} }
@@ -49,7 +49,7 @@ my %hash_map = (
     # merge_hash
     name => "$form->{first_name} $form->{family_name}",
     hash_map(
-        $bar,
+        $user,
         # copy_keys
         [ qw(account) ],
         {
