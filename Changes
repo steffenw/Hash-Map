@@ -1,5 +1,8 @@
 Revision history for Perl extension Hash::Map.
 
+0.009  Sat Jul 21 13:24:30 2012
+- link Tutorial.pod
+
 0.008  Sat Jul 21 10:38:27 2012
 - NKH sent me an email about long boring Pod
   tried to make some better
