@@ -1,4 +1,8 @@
-=head1 Hash::Map tutorial
+package Hash::Map::Tutorial;
+
+=head1 NAME
+
+Hash::Map::Tutorial - What is Hash::Map and how do I use it?
 
 =head2 Hint
 
