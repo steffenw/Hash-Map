@@ -477,7 +477,7 @@ There is also a fuctional interface.
 That is wrapped around the OO inferface.
 Not all can be implemented functional.
 
-For more information read the L<tutorial|Hash::Map::tutorial>.
+For more information read the L<Hash::Map::Tutorial|Hash::Map::Tutorial.pod>.
 
 =head1 EXAMPLE
 
@@ -854,7 +854,7 @@ L<map|http://perldoc.perl.org/functions/map.html>
 
 L<Data::Visitor|Data::Visitor>
 
-L<tutorial|Hash::Map::tutorial>
+L<Hash::Map::Tutorial|Hash::Map::Tutorial.pod>
 
 =head1 AUTHOR
 
