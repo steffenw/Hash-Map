@@ -3,7 +3,7 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.009';
+our $VERSION = '0.010';
 
 use Carp qw(confess);
 use Clone qw(clone);
@@ -388,7 +388,7 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.009
+0.010
 
 =head1 SYNOPSIS
 
@@ -477,7 +477,7 @@ There is also a fuctional interface.
 That is wrapped around the OO inferface.
 Not all can be implemented functional.
 
-For more information read the L<Hash::Map::Tutorial|Hash::Map::Tutorial.pod>.
+For more information read the L<Hash::Map::Tutorial|lib/Hash/Map/Tutorial.pod>.
 
 =head1 EXAMPLE
 
@@ -854,7 +854,7 @@ L<map|http://perldoc.perl.org/functions/map.html>
 
 L<Data::Visitor|Data::Visitor>
 
-L<Hash::Map::Tutorial|Hash::Map::Tutorial.pod>
+L<Hash::Map::Tutorial|lib/Hash/Map/Tutorial.pod>
 
 =head1 AUTHOR
 
