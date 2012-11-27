@@ -34,7 +34,37 @@ The idea is that user code should be clear and free of noise like:
     %hash     = %{ $obj->target_ref };
     $hash_ref = { $obj->target };
 
-=head2 OO style
+=head2 Why source and not set target directly?
+
+In source is stored a hash.
+If not, the default is a hash.
+
+The methods
+
+ copy_keys              copy_keys_ref
+ map_keys               map_keys_ref
+ copy_modify            copy_modify_ref
+ copy_modify_idientical copy_modify_identical_ref
+ map_modify             map_modify_ref
+ map_modify_idientical  map_modify_identical_ref
+
+copy selected data from source to target hash.
+Some methods can modify the data during transport.
+
+=head2 Some methods are only for target available.
+
+In target is stored a hash.
+If not, the default is a hash.
+
+The methods
+
+ combine
+ delete_keys delete_keys_ref
+ modify      modify_ref
+
+modify the target hash.
+
+=head2 Methods
 
 OO style ist typical to use that module.
 
@@ -53,8 +83,8 @@ OO style ist typical to use that module.
     $obj = $obj->set_source_ref({b => 2, c => 3});
 
     # get source hash
-    $source = $obj->source; # get, bacause no set parameters
-    $source = $obj->source_ref;
+    %hash     = $obj->source; # get, bacause no set parameters
+    $hash_ref = $obj->source_ref;
 
     # set target hash
     $obj = $obj->target(a => 1);
@@ -63,16 +93,30 @@ OO style ist typical to use that module.
     $obj = $obj->set_target_ref({a => 1});
 
     # get target hash
-    $target = $obj->target; # get, because no set parameters
-    $target = $obj->target_ref;
+    %hash     = $obj->target; # get, because no set parameters
+    $hash_ref = $obj->target_ref;
+
+    # keys
+    @array     = $obj->source_keys;
+    $array_ref = $obj->source_keys_ref;
+    @array     = $obj->target_keys;
+    $array_ref = $obj->target_keys_ref;
+
+    # values
+    @array     = $obj->source_values;
+    $array_ref = $obj->source_values_ref;
+    @array     = $obj->target_values;
+    $array_ref = $obj->target_values_ref;
+
+    # exists
+    $boolean = $obj->exists_source;
+    $boolean = $obj->exists_target;
 
     # combine - merge targets of other Hash::Map objects into $obj target
     $obj = $obj->combine(@objects);
 
-    # clone source
+    # clone
     $obj = $obj->clone_source;
-
-    # clone target
     $obj = $obj->clone_target;
 
     # delete keys in target
@@ -208,7 +252,31 @@ OO style ist typical to use that module.
         },
     );
 
-=head3 Automatic construction
+=head2 Iteration
+
+Use each_...:
+
+    while ( my ($key, $value) = $obj->each_source ) {
+        ...
+    }
+
+    while ( my ($key, $value) = $obj->each_target ) {
+        ...
+    }
+
+Use iterator code:
+
+    my $iterator_code = $obj->source_iterator;
+    while ( my ($key, $value) = $iterator_code->() ) {
+        ...
+    }
+
+    my $iterator_code = $obj->target_iterator;
+    while ( my ($key, $value) = $iterator_code->() ) {
+        ...
+    }
+
+=head2 Automatic construction
 
 Methods "source", "set_source", "source_ref", "set_source_ref"
 "target", "set_target", "target_ref", "set_target_ref"
@@ -236,7 +304,7 @@ shorter written as:
     Hash::Map->set_source_ref(...);
     Hash::Map->combine(...);
 
-=head2 Functional style
+=head2 Also available - functional style
 
 The first idea was to implemnt that functional.
 But OO style is more clear readable.
@@ -263,7 +331,7 @@ Similar, only the method name and return value has changed.
         ...
     );
 
-=head2 Code example
+=head2 Code examples
 
 Why are this code examples with Hash::Map longer than the original code?
 

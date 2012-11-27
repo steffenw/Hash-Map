@@ -3,7 +3,7 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.012';
+our $VERSION = '0.013';
 
 use Carp qw(confess);
 use Clone qw(clone);
@@ -72,6 +72,19 @@ sub source         { return shift->_hash(source => @_) }
 sub target         { return shift->_hash(target => @_) }
 sub set_source     { return shift->_set_hash(source => @_) }
 sub set_target     { return shift->_set_hash(target => @_) }
+
+sub source_keys   { return keys   %{ shift->source_ref } }
+sub target_keys   { return keys   %{ shift->target_ref } }
+sub source_values { return values %{ shift->source_ref } }
+sub target_values { return values %{ shift->target_ref } }
+
+sub source_keys_ref   { return [ shift->source_keys ] }
+sub target_keys_ref   { return [ shift->target_keys ] }
+sub source_values_ref { return [ shift->source_values ] }
+sub target_values_ref { return [ shift->target_values ] }
+
+sub exists_source { return exists shift->source_ref->{ ( shift )} }
+sub exists_target { return exists shift->target_ref->{ ( shift ) } }
 ## use critic (ArgUnpacking);
 
 sub combine {
@@ -118,6 +131,8 @@ sub delete_keys {
 
     return $self->delete_keys_ref(\@keys);
 }
+
+# begin from source to target
 
 sub copy_keys_ref {
     my ($self, $keys_ref, $code_ref) = @_;
@@ -184,6 +199,8 @@ sub map_keys {
     return $self->map_keys_ref($map_ref);
 }
 
+# begin copy from source to target
+
 sub merge_hashref {
     my ($self, $hashref) = @_;
 
@@ -222,6 +239,8 @@ sub modify_ref {
     return $self;
 }
 
+# end copy from source to target
+
 sub modify {
     my ($self, @more) = @_;
 
@@ -235,6 +254,8 @@ sub modify {
 
     return $self->modify_ref($modify_ref);
 }
+
+# begin copy from source to target
 
 sub copy_modify_ref {
     my ($self, $copy_modify_ref) = @_;
@@ -348,6 +369,31 @@ sub map_modify_identical {
     return $self->map_modify_identical_ref({ @map_modify }, $code_ref);
 }
 
+# end copy from source to target
+
+# begin iterator stuff
+
+sub each_source { return each %{ shift->source_ref } }
+sub each_target { return each %{ shift->target_ref } }
+
+sub source_iterator {
+    my $self = shift;
+
+    return sub {
+        return $self->each_source;
+    };
+}
+
+sub target_iterator {
+    my $self = shift;
+
+    return sub {
+        return $self->each_target;
+    };
+}
+
+# end iterator stuff
+
 sub hashref_map :Export {
     my ($source_ref, @more) = @_;
 
@@ -388,7 +434,7 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.012
+0.013
 
 =head1 SYNOPSIS
 
@@ -546,6 +592,31 @@ This methods are able to construct the object first.
 Typical the source is set and not the target.
 But it makes no sense to set the source
 and copy then all from source.
+
+=head2 method source_keys, target_keys, source_keys_ref, target_keys_ref
+
+This methods get back all keys as array or array reference.
+
+    @keys      = $obj->source_keys;
+    @keys      = $obj->target_keys;
+    $array_ref = $obj->source_keys_ref;
+    $array_ref = $obj->target_keys_ref;
+
+=head2 method source_values, target_values, source_values_ref, target_values_ref
+
+This methods get back all values as array or array reference.
+
+    @values    = $obj->source_values;
+    @values    = $obj->target_values;
+    $array_ref = $obj->source_values_ref;
+    $array_ref = $obj->target_values_ref;
+
+=head2 method exists_source, exists_target
+
+This methods allows easy writing for exists.
+
+    $boolean = $obj->exists_source($key);
+    $boolean = $obj->exists_target($key);
 
 =head2 method combine
 
@@ -794,6 +865,28 @@ Replaces code like this:
         b => $foo->y,
         ...
     );
+
+=head2 method each_source, each_target, source_iterator, target_iterator
+
+This methods allows to work with iterations.
+
+    while ( my ($key, $value) = $self->each_source ) {
+        ...
+    }
+
+    while ( my ($key, $value) = $self->each_target ) {
+        ...
+    }
+
+    my $iterator_code = $self->source_iterator;
+    while ( my ($key, $value) = $iterator_code->() ) {
+        ...
+    }
+
+    my $iterator_code = $self->target_iterator;
+    while ( my ($key, $value) = $iterator_code->() ) {
+        ...
+    }
 
 =head2 subroutine hash_map
 

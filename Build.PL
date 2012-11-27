@@ -10,7 +10,7 @@ Module::Build->new(
     dist_author       => 'Steffen Winkler <steffenw at cpan.org>',
     dist_version_from => 'lib/Hash/Map.pm',
     requires          => {
-        perl                   => 5.006,
+        perl                   => '5.006',
         version                => 0,
         Carp                   => 0,
         Clone                  => 0,
@@ -21,7 +21,7 @@ Module::Build->new(
     build_requires => {
         'Test::More'        => 0, # dist Test-Simple
         'Test::NoWarnings'  => '1.03',
-        'Test::Differences' => 0,
+        'Test::Differences' => '0.60',
     },
     recommends => {
         # build

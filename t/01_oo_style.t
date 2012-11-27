@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 60 + 1;
+use Test::More tests => 85;
 use Test::NoWarnings;
 use Test::Differences;
 
@@ -11,7 +11,7 @@ BEGIN {
     require_ok('Hash::Map');
 }
 
-# constructors
+note 'constructors';
 {
     my $package = 'Hash::Map';
     isa_ok(
@@ -66,7 +66,7 @@ BEGIN {
     );
 }
 
-# set_source, set_target
+note 'set_source, set_target';
 {
     my $obj = Hash::Map
         ->set_source(s => 11)
@@ -74,18 +74,19 @@ BEGIN {
     eq_or_diff(
         $obj->source_ref,
         { s => 11 },
-        'data of set_souce',
+        'data of set_source',
     );
     eq_or_diff(
         $obj->target_ref,
         { t => 12 },
         'data of set_target',
     );
+
     $obj->set_source;
     eq_or_diff(
         $obj->source_ref,
         {},
-        'data of empty set_souce',
+        'data of empty set_source',
     );
     $obj
         ->set_target
@@ -100,8 +101,8 @@ BEGIN {
         { s => 21 },
         'data of empty set_target',
     );
-    $obj
-        ->set_target_ref({t => 22});
+
+    $obj->set_target_ref({t => 22});
     eq_or_diff(
         $obj->target_ref,
         { t => 22 },
@@ -109,10 +110,114 @@ BEGIN {
     );
 }
 
-# combine
+note 'get';
+{
+    my $obj = Hash::Map->new;
+    $obj->target_ref->{t} = 't',
+    $obj->source_ref->{s} = 's',
+    eq_or_diff(
+        { $obj->target },
+        { t => 't' },
+        'target',
+    );
+    eq_or_diff(
+        { $obj->source },
+        { s => 's' },
+        'source',
+    );
+}
+
+note 'clone';
+{
+    my $obj = Hash::Map->new;
+    isnt(
+        scalar $obj->target_ref,
+        scalar $obj->clone_target->target_ref,
+        'clone target',
+    );
+    isnt(
+        scalar $obj->source_ref,
+        scalar $obj->clone_source->source_ref,
+        'clone source',
+    );
+}
+
+note 'keys';
+{
+    my $obj = Hash::Map
+        ->set_source(s1 => 11, s2 => 12)
+        ->set_target(t1 => 21, t2 => 22);
+    eq_or_diff(
+        [ sort $obj->source_keys ],
+        [ qw( s1 s2 ) ],
+        'source keys',
+    );
+    eq_or_diff(
+        [ sort $obj->target_keys ],
+        [ qw( t1 t2 ) ],
+        'target keys',
+    );
+    eq_or_diff(
+        [ sort @{ $obj->source_keys_ref } ],
+        [ qw( s1 s2 ) ],
+        'source keys ref',
+    );
+    eq_or_diff(
+        [ sort @{ $obj->target_keys_ref } ],
+        [ qw( t1 t2 ) ],
+        'target keys ref',
+    );
+}
+
+note 'values';
+{
+    my $obj = Hash::Map
+        ->set_source(s1 => 11, s2 => 12)
+        ->set_target(t1 => 21, t2 => 22);
+    eq_or_diff
+        [ sort $obj->source_values ],
+        [ qw( 11 12 ) ],
+        'source values';
+    eq_or_diff
+        [ sort $obj->target_values ],
+        [ qw( 21 22 ) ],
+        'target values';
+    eq_or_diff
+        [ sort @{ $obj->source_values_ref } ],
+        [ qw( 11 12 ) ],
+        'source values ref';
+    eq_or_diff
+        [ sort @{ $obj->target_values_ref } ],
+        [ qw( 21 22 ) ],
+        'target values ref';
+}
+
+note 'exists';
+{
+    my $obj = Hash::Map
+        ->set_source(s1 => undef)
+        ->set_target(t1 => undef);
+    ok(
+        $obj->exists_source('s1'),
+        'source s1 exists',
+    );
+    ok(
+        ! $obj->exists_source('s2'),
+        'source s2 not exists',
+    );
+    ok(
+        $obj->exists_target('t1'),
+        'target t1 exists',
+    );
+    ok(
+        ! $obj->exists_target('t2'),
+        'target t2 not exists',
+    );
+}
+
+note 'combine';
 {
     my $obj = Hash::Map->target(t1 => 11, t2 => 12);
-
     $obj->combine(
         Hash::Map->target(t2 => 22, t3 => 23),
         Hash::Map->target(t3 => 33, t4 => 34),
@@ -129,44 +234,7 @@ BEGIN {
     );
 }
 
-# get
-{
-    my $obj = Hash::Map->new;
-
-    $obj->target_ref->{t} = 't',
-    $obj->source_ref->{s} = 's',
-
-    eq_or_diff(
-        { $obj->target },
-        { t => 't' },
-        'target',
-    );
-
-    eq_or_diff(
-        { $obj->source },
-        { s => 's' },
-        'source',
-    );
-}
-
-# clone
-{
-    my $obj = Hash::Map->new;
-
-    isnt(
-        scalar $obj->target_ref,
-        scalar $obj->clone_target->target_ref,
-        'clone target',
-    );
-
-    isnt(
-        scalar $obj->source_ref,
-        scalar $obj->clone_source->source_ref,
-        'clone source',
-    );
-}
-
-# delete
+note 'delete';
 {
     eq_or_diff(
         scalar Hash::Map
@@ -176,7 +244,6 @@ BEGIN {
         {b => 12, d => 14},
         'delete_keys',
     );
-
     eq_or_diff(
         scalar Hash::Map
             ->target_ref({ a => 21, b => 22, c => 23, d => 24 })
@@ -187,7 +254,7 @@ BEGIN {
     );
 }
 
-# copy keys
+note 'copy keys';
 {
     eq_or_diff(
         scalar Hash::Map
@@ -198,7 +265,6 @@ BEGIN {
         {a => 11, c => 13, d => 14},
         'copy_keys',
     );
-
     eq_or_diff(
         scalar Hash::Map
             ->target_ref({ a => 21 })
@@ -210,10 +276,9 @@ BEGIN {
     );
 }
 
-# copy keys with code_ref
+note 'copy keys with code_ref';
 {
     my $obj = Hash::Map->new;
-
     eq_or_diff(
         scalar $obj
             ->target(a => 11)
@@ -233,7 +298,6 @@ BEGIN {
         {a => 11, p_c => 13, p_d => 14},
         'copy_keys with code_ref',
     );
-
     eq_or_diff(
         scalar $obj
             ->target_ref({ a => 21 })
@@ -255,7 +319,7 @@ BEGIN {
     );
 }
 
-# map keys
+note 'map keys';
 {
     eq_or_diff(
         scalar Hash::Map
@@ -269,7 +333,6 @@ BEGIN {
         {a => 11, c => 12, d => 13},
         'map_keys',
     );
-
     eq_or_diff(
         scalar Hash::Map
             ->target_ref({ a => 21 })
@@ -284,7 +347,7 @@ BEGIN {
     );
 }
 
-# merge hash
+note 'merge hash';
 {
     eq_or_diff(
         scalar Hash::Map
@@ -297,7 +360,6 @@ BEGIN {
         {a => 12, b => 13},
         'merge_hash',
     );
-
     eq_or_diff(
         scalar Hash::Map
             ->target_ref({ a => 21 })
@@ -311,10 +373,9 @@ BEGIN {
     );
 }
 
-# modify
+note 'modify';
 {
     my $obj = Hash::Map->new;
-
     eq_or_diff(
         scalar $obj
             ->target(a => 11, b => 12)
@@ -335,7 +396,6 @@ BEGIN {
         {a => 'pa_11', b => 'pb_12'},
         'modify',
     );
-
     eq_or_diff(
         scalar $obj
             ->target_ref({ a => 21, b => 22 })
@@ -358,10 +418,9 @@ BEGIN {
     );
 }
 
-# copy keys + modify
+note 'copy keys + modify';
 {
     my $obj = Hash::Map->new;
-
     eq_or_diff(
         scalar $obj
             ->source(a => 11, b => 12)
@@ -382,7 +441,6 @@ BEGIN {
         {a => 'pa_11', b => 'pb_12'},
         'copy_modify',
     );
-
     eq_or_diff(
         scalar $obj
             ->source_ref({ a => 21, b => 22 })
@@ -403,7 +461,6 @@ BEGIN {
         {a => 'pa_21', b => 'pb_22'},
         'copy_modify_ref',
     );
-
     eq_or_diff(
         scalar $obj
             ->source(a => 31, b => 32)
@@ -423,7 +480,6 @@ BEGIN {
         {a => 'pa_31', b => 'pb_32'},
         'copy_modify_identical',
     );
-
     eq_or_diff(
         scalar $obj
             ->source_ref({ a => 41, b => 42 })
@@ -445,10 +501,9 @@ BEGIN {
     );
 }
 
-# map keys + modify
+note 'map keys + modify';
 {
     my $obj = Hash::Map->new;
-
     eq_or_diff(
         scalar $obj
             ->source(a => 11, b => 12)
@@ -469,7 +524,6 @@ BEGIN {
         {b => 'pab_11', c => 'pbc_12'},
         'map_modify',
     );
-
     eq_or_diff(
         scalar $obj
             ->source_ref({ a => 21, b => 22 })
@@ -490,7 +544,6 @@ BEGIN {
         {b => 'pab_21', c => 'pbc_22'},
         'map_modify_ref',
     );
-
     eq_or_diff(
         scalar $obj
             ->source(a => 31, b => 32)
@@ -511,7 +564,6 @@ BEGIN {
         {b => 'pab_31', c => 'pbc_32'},
         'map_modify_identical',
     );
-
     eq_or_diff(
         scalar $obj
             ->source_ref({ a => 41, b => 42})
@@ -531,4 +583,112 @@ BEGIN {
         {b => 'pab_41', c => 'pbc_42'},
         'map_modify_identical_ref',
     );
+}
+
+note 'iteration with each';
+{
+    my $obj = Hash::Map
+        ->set_source(s1 => 11, s2 => 12)
+        ->set_target(t1 => 21, t2 => 22);
+    # source
+    {
+        my ($key, $value) = $obj->each_source;
+        is(
+            $value,
+            $obj->source_ref->{$key},
+            '1st source iteration',
+        );
+    }
+    {
+        my ($key, $value) = $obj->each_source;
+        is(
+            $value,
+            $obj->source_ref->{$key},
+            '2nd source iteration',
+        );
+    }
+    eq_or_diff(
+        [ $obj->each_source ],
+        [],
+        'empty source iteration',
+    );
+    # target
+    {
+        my ($key, $value) = $obj->each_target;
+        is(
+            $value,
+            $obj->target_ref->{$key},
+            '1st target iteration',
+        );
+    }
+    {
+        my ($key, $value) = $obj->each_target;
+        is(
+            $value,
+            $obj->target_ref->{$key},
+            '2nd target iteration',
+        );
+    }
+    eq_or_diff(
+        [ $obj->each_target ],
+        [],
+        'empty target iteration',
+    );
+}
+
+note 'iteration with code reference';
+{
+    my $obj = Hash::Map
+        ->set_source(s1 => 11, s2 => 12)
+        ->set_target(t1 => 21, t2 => 22);
+    # source
+    {
+        my $iterator_code = $obj->source_iterator;
+        {
+            my ($key, $value) = $iterator_code->();
+            eq_or_diff(
+                [ $key, $value ],
+                [ $key, $obj->source_ref->{$key} ],
+                '1st source iteration',
+            );
+        }
+        {
+            my ($key, $value) = $iterator_code->();
+            eq_or_diff(
+                [ $key, $value ],
+                [ $key, $obj->source_ref->{$key} ],
+                '2nd source iteration',
+            );
+        }
+        eq_or_diff(
+            [ $iterator_code->() ],
+            [],
+            '3rd source iteration',
+        );
+    }
+    # target
+    {
+        my $iterator_code = $obj->target_iterator;
+        {
+            my ($key, $value) = $iterator_code->();
+            eq_or_diff(
+                [ $key, $value ],
+                [ $key, $obj->target_ref->{$key} ],
+                '1st target iteration',
+            );
+        }
+        {
+            my ($key, $value) = $iterator_code->();
+            eq_or_diff(
+                [ $key, $value ],
+                [ $key, $obj->target_ref->{$key} ],
+                '2nd target iteration',
+            );
+        }
+        eq_or_diff(
+            [ $iterator_code->() ],
+            [],
+            '3rd target iteration',
+        );
+    }
 }
