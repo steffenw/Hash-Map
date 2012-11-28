@@ -8,14 +8,14 @@ Hash::Map::Tutorial - What is Hash::Map and how do I use it?
 
 When I write
 
-    $obj = $obj->this_method;
+    $obj = $obj->this_example_method;
 
 I mean, that the Hash::Map object itself will be returned.
 So it is possible to build chains like that:
 
-    $obj->this_method->next_method;
+    $obj->this_example_method->next_example_method;
 
-It is typical used for setter or worker methods.
+That is typical used for setter or worker methods.
 
 =head2 Why existing both, method_name and method_name_ref?
 
@@ -24,7 +24,7 @@ The idea is that user code should be clear and free of noise like:
 
     $obj->name_ref( $hashref );
     $obj->name( %hash );
-    # instaed of
+    # instead of
     $obj->name( %{$hashref} );
     $obj->name_ref( \%hash );
 
@@ -36,8 +36,8 @@ The idea is that user code should be clear and free of noise like:
 
 =head2 Why source and not set target directly?
 
-In source is stored a hash.
-If not, the default is a hash.
+In source can stored a hash.
+If that is not done, an empty hash is used instead.
 
 The methods
 
@@ -53,8 +53,8 @@ Some methods can modify the data during transport.
 
 =head2 Some methods are only for target available.
 
-In target is stored a hash.
-If not, the default is a hash.
+In target can stored a hash.
+If that is not done, an empty hash is used instead.
 
 The methods
 
@@ -83,7 +83,7 @@ OO style ist typical to use that module.
     $obj = $obj->set_source_ref({b => 2, c => 3});
 
     # get source hash
-    %hash     = $obj->source; # get, bacause no set parameters
+    %hash     = $obj->source; # get, because no set parameters
     $hash_ref = $obj->source_ref;
 
     # set target hash

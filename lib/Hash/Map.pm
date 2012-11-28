@@ -3,7 +3,7 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.013';
+our $VERSION = '0.014';
 
 use Carp qw(confess);
 use Clone qw(clone);
@@ -434,7 +434,7 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.013
+0.014
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension Hash::Map.
 
+0.014  Wed Nov 28 21:32:50 2012
+- fixed documentation
+
 0.013  Tue Nov 27 21:58:39 2012
 - added methods
   source_keys

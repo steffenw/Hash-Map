@@ -25,8 +25,9 @@ Module::Build->new(
     },
     recommends => {
         # build
-        'Test::Pod'           => '1.14',
-        'Test::Pod::Coverage' => '1.04',
+        'Test::Pod'            => '1.14',
+        'Test::Pod::Coverage'  => '1.04',
+        'Pod::Coverage::Moose' => 0,
     },
     create_makefile_pl   => 'traditional',
     recursive_test_files => 0,
