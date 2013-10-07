@@ -953,7 +953,7 @@ L<Hash::Map::Tutorial|Hash::Map::Tutorial>
 
 Steffen Winkler
 
-inspired by: Andreas Specht C<< <ACID@cpan.org> >>
+inspired by: Andreas Specht C<< <ACID at cpan.org> >>
 
 =head1 LICENSE AND COPYRIGHT
 
