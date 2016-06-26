@@ -3,13 +3,19 @@ package Hash::Map; ## no critic (TidyCode)
 use strict;
 use warnings;
 
-our $VERSION = '0.014';
-
 use Carp qw(confess);
 use Clone qw(clone);
-use Perl6::Export::Attrs;
 use Scalar::Util qw(blessed);
 use Try::Tiny;
+
+our $VERSION = '0.015';
+
+use parent qw( Exporter::Tiny );
+
+our @EXPORT_OK = qw(
+    hashref_map
+    hash_map
+);
 
 sub new {
     return bless
@@ -394,7 +400,7 @@ sub target_iterator {
 
 # end iterator stuff
 
-sub hashref_map :Export {
+sub hashref_map {
     my ($source_ref, @more) = @_;
 
     my $self = Hash::Map->source_ref($source_ref);
@@ -418,7 +424,7 @@ sub hashref_map :Export {
     return $self->target_ref;
 }
 
-sub hash_map :Export { ## no critic (ArgUnpacking)
+sub hash_map { ## no critic (ArgUnpacking)
     return %{ hashref_map(@_) };
 }
 
@@ -927,11 +933,13 @@ L<Carp|Carp>
 
 L<Clone|Clone>
 
-L<Perl6::Export::Attrs|Perl6::Export::Attrs>
-
 L<Scalar::Util|Scalar::Util>
 
 L<Try::Tiny|Try::Tiny>
+
+L<parent|parent>
+
+L<Exporter::Tiny|Exporter::Tiny>
 
 =head1 INCOMPATIBILITIES
 
@@ -957,7 +965,7 @@ inspired by: Andreas Specht C<< <ACID at cpan.org> >>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2012,
+Copyright (c) 2012 - 2016,
 Steffen Winkler
 C<< <steffenw at cpan.org> >>.
 All rights reserved.

@@ -6,6 +6,7 @@ use warnings;
 use Test::More;
 use Test::Differences;
 use Cwd qw(getcwd chdir);
+use English qw(-no_match_vars $CHILD_ERROR);
 
 $ENV{AUTHOR_TESTING} or plan(
     skip_all => 'Set $ENV{AUTHOR_TESTING} to run this test.'
@@ -21,14 +22,14 @@ my @data = (
         params => '-I../lib -T',
         result => <<'EOT',
 $hash_map = {
-  'mail_address' => 'steffenw@example.com',
-  'city' => 'Examplecity',
   'account' => 'STEFFENW',
-  'street' => 'Examplestreet',
+  'city' => 'Examplecity',
   'country_code' => 'DE',
+  'mail_address' => 'steffenw@example.com',
+  'mail_name' => 'Steffen Winkler',
   'name' => 'Steffen Winkler',
-  'zip_code' => '01234',
-  'mail_name' => 'Steffen Winkler'
+  'street' => 'Examplestreet',
+  'zip_code' => '01234'
 };
 EOT
     },
@@ -39,14 +40,14 @@ EOT
         params => '-I../lib -T',
         result => <<'EOT',
 $hash_map = {
-  'mail_address' => 'steffenw@example.com',
-  'city' => 'Examplecity',
   'account' => 'STEFFENW',
-  'street' => 'Examplestreet',
+  'city' => 'Examplecity',
   'country_code' => 'DE',
+  'mail_address' => 'steffenw@example.com',
+  'mail_name' => 'Steffen Winkler',
   'name' => 'Steffen Winkler',
-  'zip_code' => '01234',
-  'mail_name' => 'Steffen Winkler'
+  'street' => 'Examplestreet',
+  'zip_code' => '01234'
 };
 EOT
     },
@@ -55,7 +56,9 @@ EOT
 for my $data (@data) {
     my $dir = getcwd();
     chdir("$dir/$data->{path}");
-    my $result = qx{perl $data->{script} 2>&3};
+    my $result = qx{perl $data->{script} 2>&1};
+    $CHILD_ERROR
+        and die "Couldn't run $data->{script} (status $CHILD_ERROR)";
     chdir($dir);
     eq_or_diff(
         $result,

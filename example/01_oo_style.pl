@@ -65,6 +65,10 @@ my $hash_map = Hash::Map->combine(
         ),
 )->target_ref;
 
-() = print Data::Dumper->new([$hash_map], ['hash_map'])->Indent(1)->Dump;
+() = print { *STDOUT } Data::Dumper ## no critic (LongChainsOfMethodCalls)
+    ->new([$hash_map], ['hash_map'])
+    ->Indent(1)
+    ->Sortkeys(1)
+    ->Dump;
 
 # $Id$

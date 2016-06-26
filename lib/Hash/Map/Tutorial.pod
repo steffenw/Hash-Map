@@ -442,3 +442,26 @@ and prevents: Don't repeat yourself.
             ],
         ),
     );
+
+=head3 an example from real code
+
+Rename keys during fetching from database result into a hash reference.
+
+    Hash::Map
+        ->new
+        ->map_modify_identical(
+            qw(
+                vorname  firstname
+                name     lastname
+                zusatz1  name1
+                zusatz2  name2
+                strasse  street
+                ortsteil city_part
+                plz      zipcode
+                ort      city
+            ),
+            method ($source_key) {
+                return $db_result->$source_key;
+            },
+        )
+        ->target_ref;

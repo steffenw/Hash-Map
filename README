@@ -1,4 +1,4 @@
-Hash::Map version 0.014
+Hash::Map version 0.015
 =======================
 
 Manipulate hashes map like.
@@ -18,13 +18,13 @@ This module requires these other modules and libraries:
 
     Carp
     Clone
-    Perl6::Export::Attrs
+    Exporter::Tiny
     Scalar::Util
     Try::Tiny
 
 COPYRIGHT AND LICENCE
 
-Copyright (c) 2012,
+Copyright (c) 2012 - 2016,
 Steffen Winkler
 steffenw at cpan.org.
 All rights reserved.
