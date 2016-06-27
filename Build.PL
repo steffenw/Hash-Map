@@ -10,13 +10,14 @@ Module::Build->new(
     dist_author       => 'Steffen Winkler <steffenw at cpan.org>',
     dist_version_from => 'lib/Hash/Map.pm',
     requires          => {
-        perl           => '5.006',
-        parent         => 0,
-        version        => 0,
-        Carp           => 0,
-        Clone          => 0,
-        'Scalar::Util' => 0,
-        'Try::Tiny'    => 0,
+        perl             => '5.006',
+        parent           => 0,
+        version          => 0,
+        Carp             => 0,
+        Clone            => 0,
+        'Exporter::Tiny' => 0,
+        'Scalar::Util'   => 0,
+        'Try::Tiny'      => 0,
     },
     build_requires => {
         'Test::More'        => 0, # dist Test-Simple

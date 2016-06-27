@@ -8,7 +8,7 @@ use Clone qw(clone);
 use Scalar::Util qw(blessed);
 use Try::Tiny;
 
-our $VERSION = '0.015';
+our $VERSION = '0.016';
 
 use parent qw( Exporter::Tiny );
 
@@ -440,7 +440,7 @@ Hash::Map - Manipulate hashes map like
 
 =head1 VERSION
 
-0.014
+0.016
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension Hash::Map.
 
+0.016  Sun Jun 26 18:30:00 2016
+- added missing dependency
+
 0.015  Sun Jun 26 08:30:00 2016
 - fixed bug https://rt.cpan.org/Ticket/Display.html?id=115324
 
